@@ -1,0 +1,528 @@
+{
+  "scenario_id": "P4",
+  "engine_version": "1.4.0",
+  "assumptions": [
+    "context.data_classification defaulted to \"unspecified\".",
+    "context.recovery_point_minutes defaulted to null.",
+    "context.recovery_time_minutes defaulted to null.",
+    "context.recovery_scope defaulted to \"zone_outage\".",
+    "context.peak_requests_per_second defaulted to null.",
+    "context.peak_day_requests defaulted to null.",
+    "context.budget_policy defaulted to \"soft\".",
+    "context.monthly_egress_gb defaulted to null.",
+    "context.search_corpus_gb defaulted to null.",
+    "context.vendor_lock_in defaulted to \"medium\".",
+    "context.data_profile defaulted to \"general\".",
+    "context.residency_region defaulted to \"\".",
+    "Peak request proxy uses 0.25 per peak active client per second."
+  ],
+  "validation_errors": [],
+  "status": "ok_with_warnings",
+  "summary": "Start with a modular monolith deployment on Amazon ECS on AWS Fargate in ap-south-1 (Mumbai). Keep restricted workflows, audit records and backups inside the approved data boundary.",
+  "architecture_style": "modular_monolith",
+  "architecture_decision": {
+    "style": "modular_monolith",
+    "justification": "Keep one application deployment with explicit domain and access boundaries. Shared transactions and a single release reduce coordination costs.",
+    "driven_by": [
+      "team.size",
+      "compliance",
+      "scale.workload"
+    ],
+    "data_flow": [
+      "Route client requests through the application ingress.",
+      "Enforce identity and authorization in the application.",
+      "Commit transaction records in the primary database and dispatch external payment work asynchronously."
+    ],
+    "alternatives": [
+      {
+        "choice": "Independently deployed business services",
+        "why_not": "Separate business services would add network calls, deployment coordination and distributed data consistency work."
+      }
+    ],
+    "tradeoffs": [
+      "Domain boundaries need tests and explicit ownership as the application grows."
+    ],
+    "source": "https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles"
+  },
+  "stack": {
+    "frontend": {
+      "choice": "React + Vite (client) + React Native",
+      "justification": "Serves an interactive client as static assets and keeps API deployment independent. Interactive web views can ship as immutable assets. The team already lists typescript. Shares mobile application logic and UI across iOS and Android. A shared codebase reduces platform duplication. The team already lists typescript. Share TypeScript validation and API contracts with the web client.",
+      "driven_by": [
+        "project.platforms",
+        "team.languages"
+      ],
+      "alternatives": [
+        {
+          "choice": "Vue + Vite",
+          "why_not": "Its total fit score tied. The stable catalogue ID resolves identical scores.",
+          "score_gap": 0,
+          "factors": []
+        },
+        {
+          "choice": "Flutter",
+          "why_not": "It scored 15 points lower on combined fit. The team already lists typescript. Share TypeScript validation and API contracts with the web client.",
+          "score_gap": 15,
+          "factors": [
+            {
+              "field": "team.languages",
+              "points": 10,
+              "selected": [
+                "The team already lists typescript."
+              ],
+              "alternative": [
+                "This option adds a language outside the listed team skills."
+              ]
+            },
+            {
+              "field": "project.platforms",
+              "points": 5,
+              "selected": [
+                "A shared codebase reduces platform duplication.",
+                "Share TypeScript validation and API contracts with the web client."
+              ],
+              "alternative": [
+                "A shared codebase reduces platform duplication."
+              ]
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "Client rendering alone is a poor default for indexable pages.",
+        "Verify native dependencies, background sync, and device memory on physical hardware.",
+        "Keep identity, schemas and regression checks consistent across client builds."
+      ],
+      "sources": [
+        "https://react.dev/learn/start-a-new-react-project",
+        "https://reactnative.dev/docs/getting-started"
+      ]
+    },
+    "backend": {
+      "choice": "Spring Boot",
+      "justification": "Provides transaction management, mature security integration and module boundaries. A transaction boundary protects ledger writes and records auditable state changes. The team already lists java. A single deployable API keeps the initial service boundary explicit.",
+      "driven_by": [
+        "project.type",
+        "team.languages"
+      ],
+      "alternatives": [
+        {
+          "choice": "Node.js + Fastify",
+          "why_not": "It scored 11 points lower on combined fit. A transaction boundary protects ledger writes and records auditable state changes. The alternative gained points on team.size.",
+          "score_gap": 11,
+          "factors": [
+            {
+              "field": "project.type",
+              "points": 14,
+              "selected": [
+                "A single deployable API keeps the initial service boundary explicit.",
+                "A transaction boundary protects ledger writes and records auditable state changes."
+              ],
+              "alternative": [
+                "A single deployable API keeps the initial service boundary explicit."
+              ]
+            },
+            {
+              "field": "team.size",
+              "points": -3,
+              "selected": [],
+              "alternative": [
+                "A small HTTP surface keeps initial operational work low."
+              ]
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "Allow more baseline memory than a small Go or Node.js service."
+      ],
+      "source": "https://docs.spring.io/spring-boot/",
+      "fit_score": 20
+    },
+    "database": {
+      "choice": "Amazon RDS for PostgreSQL",
+      "justification": "Provides transactions, point-in-time recovery and a Multi-AZ option. SQL transactions fit durable state and indexed access. The data layer is paired with the selected deployment model. Use fault-domain redundancy and prove restore and failover behavior.",
+      "driven_by": [
+        "scale.workload"
+      ],
+      "alternatives": [
+        {
+          "choice": "Self-managed PostgreSQL",
+          "why_not": "Changing database ownership would add operations or cross the selected deployment boundary."
+        }
+      ],
+      "tradeoffs": [
+        "Database sizing and failover behavior need load and restore tests."
+      ],
+      "source": "https://aws.amazon.com/rds/postgresql/pricing/",
+      "fit_score": 9
+    },
+    "hosting": {
+      "choice": "Amazon ECS on AWS Fargate",
+      "justification": "Runs portable containers behind an Application Load Balancer with no node fleet. Private tasks and a regional load balancer provide a configurable regulated data plane. Retains the explicit AWS provider. Fits the requested managed cloud model. Place the data plane and backups in the selected geography. The modeled USD 1088–3160 per month affects ranking. Placement: ap-south-1 (Mumbai). Provision redundant ingress and application capacity across fault domains.",
+      "driven_by": [
+        "compliance",
+        "infrastructure.cloud_preference",
+        "infrastructure.deployment_model",
+        "infrastructure.data_residency",
+        "budget.monthly_infra_usd"
+      ],
+      "alternatives": [
+        {
+          "choice": "Cloudflare Pages",
+          "why_not": "Conflicts with the explicit provider."
+        }
+      ],
+      "tradeoffs": [
+        "The load balancer and always-running task impose a monthly baseline."
+      ],
+      "source": "https://aws.amazon.com/fargate/pricing/",
+      "fit_score": 25.62
+    },
+    "supporting": [
+      {
+        "layer": "auth",
+        "choice": "Keycloak",
+        "justification": "Use a reviewed authenticator extension with a region-approved SMS gateway. Store short-lived OTP state locally and apply per-number throttles. Deploy the identity realm and its database in the selected region. Use a separate logical database or schema with its own account on the selected relational platform.",
+        "driven_by": [
+          "requirements.auth",
+          "infrastructure.existing_systems",
+          "infrastructure.data_residency"
+        ],
+        "alternatives": [
+          {
+            "choice": "Microsoft Entra ID",
+            "why_not": "An external directory adds an account and an independent data plane."
+          }
+        ],
+        "tradeoffs": [
+          "Account lifecycle, recovery and federation scopes require explicit configuration."
+        ]
+      },
+      {
+        "layer": "storage",
+        "choice": "Amazon S3",
+        "justification": "Use a private bucket in the same region as the API with short-lived signed uploads and encryption. Separate restricted document buckets, audit access and keep backups within policy.",
+        "driven_by": [
+          "requirements.file_media_storage",
+          "infrastructure.data_residency",
+          "requirements.offline_support"
+        ],
+        "alternatives": [
+          {
+            "choice": "Database BLOB columns",
+            "why_not": "Independent object retention and direct upload reduce transactional I/O."
+          }
+        ],
+        "tradeoffs": [
+          "Lifecycle rules and egress need budgeting and review."
+        ]
+      },
+      {
+        "layer": "queue",
+        "choice": "PostgreSQL transactional outbox",
+        "justification": "Commit durable jobs and domain changes atomically. A worker claims and retries records with idempotency keys.",
+        "driven_by": [
+          "requirements.payments",
+          "scale.workload",
+          "team.size"
+        ],
+        "alternatives": [
+          {
+            "choice": "RabbitMQ",
+            "why_not": "Avoid a broker in the first release when moderate throughput can share the transaction store."
+          }
+        ],
+        "tradeoffs": [
+          "Assume at-least-once delivery and make all handlers idempotent."
+        ]
+      },
+      {
+        "layer": "payments",
+        "choice": "Razorpay hosted checkout + verified banking rail",
+        "justification": "Use hosted collection and signed webhooks. For disbursal or regulated payment flows, confirm a licensed partner, supported rail and India-only payment data handling before processing live data.",
+        "driven_by": [
+          "requirements.payments",
+          "infrastructure.data_residency",
+          "compliance"
+        ],
+        "alternatives": [
+          {
+            "choice": "Direct card data capture",
+            "why_not": "Hosted collection reduces card-data exposure and audit scope."
+          }
+        ],
+        "tradeoffs": [
+          "Country eligibility, merchant underwriting, fees and processor data scope require approval."
+        ]
+      },
+      {
+        "layer": "ml",
+        "choice": "ONNX Runtime",
+        "justification": "Serve versioned CPU inference close to the application and log model versions for audit and rollback.",
+        "driven_by": [
+          "requirements.ml_features",
+          "infrastructure.data_residency"
+        ],
+        "alternatives": [
+          {
+            "choice": "Remote inference API",
+            "why_not": "External processing introduces a separate data boundary or contract."
+          }
+        ],
+        "tradeoffs": [
+          "Benchmark throughput, accuracy and accelerator needs with representative data."
+        ]
+      },
+      {
+        "layer": "observability",
+        "choice": "OpenTelemetry + Prometheus",
+        "justification": "Record request percentiles, saturation, errors and queue lag locally. Redact payloads before collection.",
+        "driven_by": [
+          "requirements.availability",
+          "requirements.p95_latency_ms",
+          "compliance"
+        ],
+        "alternatives": [
+          {
+            "choice": "External APM SaaS",
+            "why_not": "Self-operated telemetry keeps operational data within the selected boundary."
+          }
+        ],
+        "tradeoffs": [
+          "Manage log/metric cardinality, retention and actionable alerts."
+        ]
+      },
+      {
+        "layer": "ci_cd",
+        "choice": "Forgejo Actions (private runner)",
+        "justification": "Build and scan signed images on an approved runner, keeping artifacts and credentials in the boundary.",
+        "driven_by": [
+          "team.size",
+          "infrastructure.deployment_model",
+          "infrastructure.data_residency"
+        ],
+        "alternatives": [
+          {
+            "choice": "GitHub-hosted runners",
+            "why_not": "A public runner is outside the selected boundary."
+          }
+        ],
+        "tradeoffs": [
+          "Pin actions and lock deployment credentials to the minimum scope."
+        ]
+      }
+    ]
+  },
+  "deployment": {
+    "provider": "aws",
+    "region": "ap-south-1 (Mumbai)",
+    "model": "managed_cloud",
+    "boundary": {
+      "region": "ap-south-1 (Mumbai)",
+      "core_data_services": [
+        "Amazon ECS on AWS Fargate",
+        "Amazon RDS for PostgreSQL",
+        "Amazon S3"
+      ],
+      "launch_gates": [
+        {
+          "gate": "rbi_localisation",
+          "check": "Confirm India placement for all in-scope payment data, backups and logs with the regulated partner."
+        },
+        {
+          "gate": "pci_dss",
+          "check": "Confirm cardholder-data scope, provider and payment-processor attestations, and test network segmentation.",
+          "evidence": "https://aws.amazon.com/compliance/services-in-scope/PCI/"
+        },
+        {
+          "gate": "dpdp",
+          "check": "Review notice, retention, processor duties and access controls for the personal-data flows."
+        },
+        {
+          "gate": "iso27001",
+          "check": "Confirm certification scope and document the customer control responsibilities."
+        },
+        {
+          "gate": "payment_processor",
+          "check": "Confirm merchant-country eligibility, settlement rails, processor data geography and contracts before enabling live transactions."
+        },
+        {
+          "gate": "identity_processor",
+          "check": "Verify identity or messaging processor region, metadata flows and contract before enabling the integration."
+        }
+      ]
+    }
+  },
+  "decision_trace": {
+    "eligible_hosting": [
+      {
+        "choice": "Amazon ECS on AWS Fargate",
+        "database": "Amazon RDS for PostgreSQL",
+        "min_usd": 1088,
+        "max_usd": 3160,
+        "fit_score": 25.62,
+        "selected": true
+      }
+    ],
+    "excluded_hosting": [
+      {
+        "choice": "Cloudflare Pages",
+        "reason": "Conflicts with the explicit provider."
+      },
+      {
+        "choice": "GitHub Pages",
+        "reason": "Conflicts with the explicit provider."
+      },
+      {
+        "choice": "Cloudflare Workers Free",
+        "reason": "Conflicts with the explicit provider."
+      },
+      {
+        "choice": "Google Cloud Run",
+        "reason": "Conflicts with the explicit provider."
+      },
+      {
+        "choice": "Azure App Service",
+        "reason": "Conflicts with the explicit provider."
+      },
+      {
+        "choice": "Amazon EC2 + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Google Compute Engine + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Azure Virtual Machines + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Ubuntu Server LTS + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Podman + Ubuntu Server LTS (offline)",
+        "reason": "Requires a different deployment model."
+      }
+    ]
+  },
+  "estimated_monthly_cost_usd": {
+    "min": 1088,
+    "max": 3160,
+    "breakdown": [
+      {
+        "driver": "Ingress + compute",
+        "min": 595.83,
+        "max": 1320.49
+      },
+      {
+        "driver": "Database capacity + backups",
+        "min": 231.89,
+        "max": 644.14
+      },
+      {
+        "driver": "Object storage + baseline media transfer",
+        "min": 12.5,
+        "max": 50
+      },
+      {
+        "driver": "Metered OTP allowance",
+        "min": 4,
+        "max": 102
+      },
+      {
+        "driver": "Identity service capacity",
+        "min": 64.41,
+        "max": 289.86
+      },
+      {
+        "driver": "CPU inference workers",
+        "min": 92.02,
+        "max": 421.76
+      },
+      {
+        "driver": "Background outbox workers",
+        "min": 64.41,
+        "max": 193.24
+      },
+      {
+        "driver": "Metrics storage + retained logs",
+        "min": 15.34,
+        "max": 76.68
+      },
+      {
+        "driver": "General networking and telemetry allowance",
+        "min": 7.67,
+        "max": 61.35
+      }
+    ],
+    "budget_usd": 6000,
+    "budget_fit": "within_budget",
+    "budget_policy": "soft",
+    "assumptions": [
+      "Illustrative monthly USD operating band. Inputs are sizing proxies, not a measured request or billing forecast.",
+      "Peak proxy: 10000 concurrent clients, 2500 requests or realtime events per second and 500 GB total data.",
+      "Placement: ap-south-1 (Mumbai). Budget includes redundant application and data capacity.",
+      "Excludes taxes, team labor, initial hardware, domain purchases and transaction fees. Media and OTP allowances are modeled separately when requested.",
+      "Heavy internet egress is outside the baseline. Provide a monthly estimate to price it explicitly."
+    ]
+  },
+  "warnings": [
+    {
+      "code": "DPDP_CONTROLS",
+      "severity": "info",
+      "message": "Review current Indian data-protection requirements for notice, access controls, retention and processor agreements.",
+      "fields": [
+        "compliance"
+      ]
+    },
+    {
+      "code": "PCI_SCOPE",
+      "severity": "warning",
+      "message": "Confirm PCI scope with the processor and assessor. Keep raw card data out of app, storage and logs, verify the processor attestation and segment the environment.",
+      "fields": [
+        "compliance",
+        "requirements.payments"
+      ]
+    },
+    {
+      "code": "RBI_DATA_PLANE",
+      "severity": "warning",
+      "message": "Keep in-scope payment data, replicas, backups and transaction logs in India. Obtain the regulated partner's approval for settlement, disbursal and incident workflows.",
+      "fields": [
+        "compliance",
+        "infrastructure.data_residency"
+      ]
+    },
+    {
+      "code": "AUDIT_PROGRAM",
+      "severity": "info",
+      "message": "Map controls, provider attestations, scope, access reviews and operational evidence. The organisation owns its audit or certification.",
+      "fields": [
+        "compliance"
+      ]
+    },
+    {
+      "code": "OTP_PROCESSOR_REVIEW",
+      "severity": "warning",
+      "message": "Verify country eligibility and residency of the SMS gateway and delivery logs. OTP delivery needs retry limits, abuse controls and a per-message budget.",
+      "fields": [
+        "requirements.auth",
+        "infrastructure.data_residency",
+        "budget.monthly_infra_usd"
+      ]
+    },
+    {
+      "code": "PAYMENT_PROCESSOR_REVIEW",
+      "severity": "warning",
+      "message": "Before going live, verify processor coverage for the requested country and rails and confirm any data residency or compliance obligations in the processor agreement.",
+      "fields": [
+        "requirements.payments",
+        "infrastructure.data_residency",
+        "compliance"
+      ]
+    }
+  ]
+}

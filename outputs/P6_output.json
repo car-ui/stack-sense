@@ -1,0 +1,446 @@
+{
+  "scenario_id": "P6",
+  "engine_version": "1.4.0",
+  "assumptions": [
+    "context.data_classification defaulted to \"unspecified\".",
+    "context.recovery_point_minutes defaulted to null.",
+    "context.recovery_time_minutes defaulted to null.",
+    "context.recovery_scope defaulted to \"zone_outage\".",
+    "context.peak_requests_per_second defaulted to null.",
+    "context.peak_day_requests defaulted to null.",
+    "context.budget_policy defaulted to \"soft\".",
+    "context.monthly_egress_gb defaulted to null.",
+    "context.search_corpus_gb defaulted to null.",
+    "context.vendor_lock_in defaulted to \"medium\".",
+    "context.data_profile defaulted to \"general\".",
+    "context.residency_region defaulted to \"\".",
+    "Peak request proxy uses 0.25 per peak active client per second.",
+    "Read low-end device or 2G/3G wording as a client resource constraint."
+  ],
+  "validation_errors": [],
+  "status": "ok_with_warnings",
+  "summary": "Start with a serverless deployment on Google Cloud Run in asia-south1 (Mumbai). Keep writes durable on the client and sync when a connection returns.",
+  "architecture_style": "serverless",
+  "architecture_decision": {
+    "style": "serverless",
+    "justification": "Run the stateless HTTP application on managed request-driven compute, keeping persistent state in the regional data store.",
+    "driven_by": [
+      "infrastructure.deployment_model",
+      "scale.traffic_pattern",
+      "team.has_devops"
+    ],
+    "data_flow": [
+      "Record offline writes in a durable client outbox.",
+      "Replay batches into the stateless API using operation IDs.",
+      "Persist accepted changes in the selected data store."
+    ],
+    "alternatives": [
+      {
+        "choice": "Always-on application service",
+        "why_not": "An always-running service adds a capacity baseline and operating work for this request-driven workload."
+      }
+    ],
+    "tradeoffs": [
+      "Set concurrency and minimum instance counts from measured startup and latency."
+    ],
+    "source": "https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles"
+  },
+  "stack": {
+    "frontend": {
+      "choice": "Native Android (Kotlin + Jetpack)",
+      "justification": "Keeps the client close to device storage, camera and Android background-work APIs. Use Room for the durable queue and WorkManager for network-aware retries. The low-end or intermittent-connectivity description favors testing a native Android client. This option adds a language outside the listed team skills.",
+      "driven_by": [
+        "requirements.offline_support",
+        "project.description",
+        "team.languages"
+      ],
+      "alternatives": [
+        {
+          "choice": "React Native",
+          "why_not": "It scored 1 points lower on combined fit. Use Room for the durable queue and WorkManager for network-aware retries. The low-end or intermittent-connectivity description favors testing a native Android client. The alternative gained points on team.languages.",
+          "score_gap": 1,
+          "factors": [
+            {
+              "field": "team.languages",
+              "points": -16,
+              "selected": [
+                "This option adds a language outside the listed team skills."
+              ],
+              "alternative": [
+                "The team already lists javascript."
+              ]
+            },
+            {
+              "field": "requirements.offline_support",
+              "points": 15,
+              "selected": [
+                "Use Room for the durable queue and WorkManager for network-aware retries."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "project.description",
+              "points": 8,
+              "selected": [
+                "The low-end or intermittent-connectivity description favors testing a native Android client."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "project.platforms",
+              "points": -6,
+              "selected": [],
+              "alternative": [
+                "A shared codebase reduces platform duplication."
+              ]
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "An iOS client would need separate implementation."
+      ],
+      "source": "https://developer.android.com/topic/architecture/data-layer/offline-first",
+      "fit_score": 15
+    },
+    "backend": {
+      "choice": "FastAPI",
+      "justification": "Defines typed API contracts with built-in OpenAPI and fits Python ML dependencies. The team already lists python. Typed sync batches support idempotent retries and version negotiation. A single deployable API keeps the initial service boundary explicit. Use stable client-generated operation IDs, change cursors, version conflicts and retry-safe commits.",
+      "driven_by": [
+        "team.languages",
+        "requirements.offline_support",
+        "project.type"
+      ],
+      "alternatives": [
+        {
+          "choice": "Node.js + Fastify",
+          "why_not": "It scored 2 points lower on combined fit. Typed sync batches support idempotent retries and version negotiation. The alternative gained points on team.size.",
+          "score_gap": 2,
+          "factors": [
+            {
+              "field": "requirements.offline_support",
+              "points": 8,
+              "selected": [
+                "Typed sync batches support idempotent retries and version negotiation."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "team.size",
+              "points": -6,
+              "selected": [],
+              "alternative": [
+                "A small HTTP surface keeps initial operational work low."
+              ]
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "Background work and admin screens need separate implementation."
+      ],
+      "source": "https://fastapi.tiangolo.com/",
+      "fit_score": 17
+    },
+    "database": {
+      "choice": "Cloud SQL for PostgreSQL",
+      "justification": "Provides managed transactions, backups and an optional regional HA topology. SQL transactions fit durable state and indexed access. The data layer is paired with the selected deployment model.",
+      "driven_by": [
+        "scale.workload"
+      ],
+      "alternatives": [
+        {
+          "choice": "Self-managed PostgreSQL",
+          "why_not": "Changing database ownership would add operations or cross the selected deployment boundary."
+        }
+      ],
+      "tradeoffs": [
+        "Compute, storage and HA produce recurring charges even with idle application instances."
+      ],
+      "source": "https://cloud.google.com/sql/pricing",
+      "fit_score": 9
+    },
+    "hosting": {
+      "choice": "Google Cloud Run",
+      "justification": "Scales HTTP containers with demand and can keep minimum instances warm. Request-based autoscaling matches bursts without keeping full peak capacity idle. Managed compute reduces infrastructure maintenance for the team. Fits the requested managed cloud model. Place the data plane and backups in the selected geography. The high end could exceed the budget. The modeled USD 33–120 per month affects ranking. Placement: asia-south1 (Mumbai).",
+      "driven_by": [
+        "scale.traffic_pattern",
+        "team.has_devops",
+        "infrastructure.deployment_model",
+        "infrastructure.data_residency",
+        "budget.monthly_infra_usd"
+      ],
+      "alternatives": [
+        {
+          "choice": "Azure App Service",
+          "why_not": "It scored 7.73 points lower on combined fit. Request-based autoscaling matches bursts without keeping full peak capacity idle. The modeled USD 33–120 per month affects ranking.",
+          "score_gap": 7.73,
+          "factors": [
+            {
+              "field": "scale.traffic_pattern",
+              "points": 7,
+              "selected": [
+                "Request-based autoscaling matches bursts without keeping full peak capacity idle."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "budget.monthly_infra_usd",
+              "points": 0.73,
+              "selected": [
+                "The high end could exceed the budget.",
+                "The modeled USD 33–120 per month affects ranking."
+              ],
+              "alternative": [
+                "The high end could exceed the budget.",
+                "The modeled USD 56–170 per month affects ranking."
+              ]
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "WebSockets bill while connected and require reconnects and shared state."
+      ],
+      "source": "https://cloud.google.com/run/docs/triggering/websockets",
+      "fit_score": 13.47
+    },
+    "supporting": [
+      {
+        "layer": "auth",
+        "choice": "Keycloak",
+        "justification": "Use a reviewed authenticator extension with a region-approved SMS gateway. Store short-lived OTP state locally and apply per-number throttles. Deploy the identity realm and its database in the selected region. Use a separate logical database or schema with its own account on the selected relational platform.",
+        "driven_by": [
+          "requirements.auth",
+          "infrastructure.existing_systems",
+          "infrastructure.data_residency"
+        ],
+        "alternatives": [
+          {
+            "choice": "Microsoft Entra ID",
+            "why_not": "An external directory adds an account and an independent data plane."
+          }
+        ],
+        "tradeoffs": [
+          "Account lifecycle, recovery and federation scopes require explicit configuration."
+        ]
+      },
+      {
+        "layer": "storage",
+        "choice": "Google Cloud Storage",
+        "justification": "Use a private bucket in the same region as the API with short-lived signed uploads and encryption. Resume or retry media transfer independently from sync metadata.",
+        "driven_by": [
+          "requirements.file_media_storage",
+          "infrastructure.data_residency",
+          "requirements.offline_support"
+        ],
+        "alternatives": [
+          {
+            "choice": "Database BLOB columns",
+            "why_not": "Independent object retention and direct upload reduce transactional I/O."
+          }
+        ],
+        "tradeoffs": [
+          "Lifecycle rules and egress need budgeting and review."
+        ]
+      },
+      {
+        "layer": "other",
+        "choice": "SQLite / IndexedDB sync outbox",
+        "justification": "Persist drafts and mutation IDs on the client. Reconcile version conflicts on reconnect and expire local secrets and cached records.",
+        "driven_by": [
+          "requirements.offline_support",
+          "project.platforms"
+        ],
+        "alternatives": [
+          {
+            "choice": "Online-only API cache",
+            "why_not": "A cache alone cannot reliably replay user writes."
+          }
+        ],
+        "tradeoffs": [
+          "Requires migration, reconciliation, device security and slow-network testing."
+        ]
+      },
+      {
+        "layer": "ci_cd",
+        "choice": "Forgejo Actions (private runner)",
+        "justification": "Build and scan signed images on an approved runner, keeping artifacts and credentials in the boundary.",
+        "driven_by": [
+          "team.size",
+          "infrastructure.deployment_model",
+          "infrastructure.data_residency"
+        ],
+        "alternatives": [
+          {
+            "choice": "GitHub-hosted runners",
+            "why_not": "A public runner is outside the selected boundary."
+          }
+        ],
+        "tradeoffs": [
+          "Pin actions and lock deployment credentials to the minimum scope."
+        ]
+      }
+    ]
+  },
+  "deployment": {
+    "provider": "gcp",
+    "region": "asia-south1 (Mumbai)",
+    "model": "managed_cloud",
+    "boundary": {
+      "region": "asia-south1 (Mumbai)",
+      "core_data_services": [
+        "Google Cloud Run",
+        "Cloud SQL for PostgreSQL",
+        "Google Cloud Storage"
+      ],
+      "launch_gates": [
+        {
+          "gate": "dpdp",
+          "check": "Review notice, retention, processor duties and access controls for the personal-data flows."
+        },
+        {
+          "gate": "identity_processor",
+          "check": "Verify identity or messaging processor region, metadata flows and contract before enabling the integration."
+        }
+      ]
+    }
+  },
+  "decision_trace": {
+    "eligible_hosting": [
+      {
+        "choice": "Google Cloud Run",
+        "database": "Cloud SQL for PostgreSQL",
+        "min_usd": 33,
+        "max_usd": 120,
+        "fit_score": 13.47,
+        "selected": true
+      },
+      {
+        "choice": "Azure App Service",
+        "database": "Azure Database for PostgreSQL Flexible Server",
+        "min_usd": 56,
+        "max_usd": 170,
+        "fit_score": 5.74,
+        "selected": false
+      },
+      {
+        "choice": "Amazon ECS on AWS Fargate",
+        "database": "Amazon RDS for PostgreSQL",
+        "min_usd": 67,
+        "max_usd": 180,
+        "fit_score": 5.53,
+        "selected": false
+      }
+    ],
+    "excluded_hosting": [
+      {
+        "choice": "Cloudflare Pages",
+        "reason": "Public edge hosting lacks the required runtime or regional control."
+      },
+      {
+        "choice": "GitHub Pages",
+        "reason": "Public edge hosting lacks the required runtime or regional control."
+      },
+      {
+        "choice": "Cloudflare Workers Free",
+        "reason": "No catalogued region matches the data geography."
+      },
+      {
+        "choice": "Amazon EC2 + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Google Compute Engine + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Azure Virtual Machines + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Ubuntu Server LTS + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Podman + Ubuntu Server LTS (offline)",
+        "reason": "Requires a different deployment model."
+      }
+    ]
+  },
+  "estimated_monthly_cost_usd": {
+    "min": 33,
+    "max": 120,
+    "breakdown": [
+      {
+        "driver": "Ingress + compute",
+        "min": 6,
+        "max": 30
+      },
+      {
+        "driver": "Database capacity + backups",
+        "min": 18.4,
+        "max": 49.45
+      },
+      {
+        "driver": "Object storage + baseline media transfer",
+        "min": 2.5,
+        "max": 10
+      },
+      {
+        "driver": "Metered OTP allowance",
+        "min": 4,
+        "max": 12.6
+      },
+      {
+        "driver": "Identity service capacity",
+        "min": 2,
+        "max": 9
+      },
+      {
+        "driver": "General networking and telemetry allowance",
+        "min": 1,
+        "max": 8
+      }
+    ],
+    "budget_usd": 100,
+    "budget_fit": "overlaps_budget",
+    "budget_policy": "soft",
+    "assumptions": [
+      "Illustrative monthly USD operating band. Inputs are sizing proxies, not a measured request or billing forecast.",
+      "Peak proxy: 200 concurrent clients, 50 requests or realtime events per second and 100 GB total data.",
+      "Placement: asia-south1 (Mumbai). Starts with modest regional capacity and backups.",
+      "Excludes taxes, team labor, initial hardware, domain purchases and transaction fees. Media and OTP allowances are modeled separately when requested.",
+      "Heavy internet egress is outside the baseline. Provide a monthly estimate to price it explicitly."
+    ]
+  },
+  "warnings": [
+    {
+      "code": "DPDP_CONTROLS",
+      "severity": "info",
+      "message": "Review current Indian data-protection requirements for notice, access controls, retention and processor agreements.",
+      "fields": [
+        "compliance"
+      ]
+    },
+    {
+      "code": "BUDGET_HEADROOM",
+      "severity": "warning",
+      "message": "The upper monthly estimate exceeds the budget. Meter workloads, enforce usage alerts and verify the region-specific bill.",
+      "fields": [
+        "budget.monthly_infra_usd",
+        "scale.traffic_pattern"
+      ]
+    },
+    {
+      "code": "OTP_PROCESSOR_REVIEW",
+      "severity": "warning",
+      "message": "Verify country eligibility and residency of the SMS gateway and delivery logs. OTP delivery needs retry limits, abuse controls and a per-message budget.",
+      "fields": [
+        "requirements.auth",
+        "infrastructure.data_residency",
+        "budget.monthly_infra_usd"
+      ]
+    }
+  ]
+}

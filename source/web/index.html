@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StackSense Workbench</title>
+  <link rel="stylesheet" href="/web/style.css">
+  <script type="module" src="/web/app.mjs"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="frame topbar-inner">
+      <a class="brand" href="/" aria-label="StackSense Workbench home"><span class="mark" aria-hidden="true">◈</span> StackSense<span class="brand-sub"> / workbench</span></a>
+      <span class="badge"><i></i> Local rules engine</span>
+    </div>
+  </header>
+  <main class="frame">
+    <section class="intro">
+      <p class="eyebrow">SYNERGY ’26 / SYSTEMS DESIGN</p>
+      <h1>Find the stack<br><em>your project needs.</em></h1>
+      <p>Describe the workload, delivery team and infrastructure policy. Inspect the decisions, check the budget and export the result.</p>
+    </section>
+    <section class="bench" aria-label="Scenario workbench">
+      <aside class="panel setup">
+        <div class="panel-head">
+          <p class="eyebrow">01 / SCENARIO</p>
+          <h2>Project requirements</h2>
+          <p>Start from a public case or import a scenario file.</p>
+        </div>
+        <div class="actions input-actions">
+          <button type="button" id="import" class="button secondary">Import JSON</button>
+          <button type="button" id="new" class="button quiet">New scenario</button>
+          <input type="file" accept=".json,application/json" id="file" hidden>
+        </div>
+        <div class="preset-list" id="presets" aria-label="Public scenarios"></div>
+        <p id="notice" class="notice" role="status"></p>
+        <nav aria-label="Input modes" class="modes">
+          <button id="fields-mode" type="button" aria-pressed="true">Guided fields</button>
+          <button id="json-mode" type="button" aria-pressed="false">Raw JSON</button>
+        </nav>
+        <form id="fields" novalidate></form>
+        <div id="editor" hidden>
+          <label for="raw">Scenario JSON</label>
+          <textarea id="raw" rows="18" spellcheck="false" autocapitalize="off"></textarea>
+        </div>
+        <div class="run-bar">
+          <button id="run" class="button primary" type="button">Recommend stack <span aria-hidden="true">↗</span></button>
+          <small>Deterministic · No network calls for recommendations</small>
+        </div>
+      </aside>
+      <section class="panel results" aria-labelledby="result-heading">
+        <div class="panel-head result-head">
+          <div><p class="eyebrow">02 / RECOMMENDATION</p><h2 id="result-heading">Decision report</h2></div>
+          <button id="export" class="button secondary" type="button" disabled>Export JSON</button>
+        </div>
+        <div id="out" aria-live="polite"><div class="empty"><span aria-hidden="true">◇</span><h3>Choose a scenario to begin</h3><p>The engine compares compatible stacks and explains each layer.</p></div></div>
+      </section>
+    </section>
+    <footer>STACKSENSE WORKBENCH <span>Deterministic architecture recommendations · v1.4.0</span></footer>
+  </main>
+</body>
+</html>

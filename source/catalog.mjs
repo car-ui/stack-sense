@@ -1,0 +1,145 @@
+const tech = (id, choice, languages, benefit, tradeoff, source) =>
+  ({ id, choice, languages: languages.split(' ').filter(Boolean), benefit, tradeoff, source });
+
+export const frontend = [
+  tech('astro', 'Astro', 'javascript typescript html css', 'Pre-renders content and ships JavaScript only for interactive islands.', 'Interactive pages still need deliberate hydration boundaries.', 'https://docs.astro.build/en/concepts/why-astro/'),
+  tech('next', 'Next.js', 'typescript javascript', 'Renders public routes on the server or at build time while keeping authenticated views interactive.', 'SSR adds a runtime and caching complexity. Deploy the web server in the selected region.', 'https://nextjs.org/docs/app/getting-started/server-and-client-components'),
+  tech('react', 'React + Vite', 'typescript javascript', 'Serves an interactive client as static assets and keeps API deployment independent.', 'Client rendering alone is a poor default for indexable pages.', 'https://react.dev/learn/start-a-new-react-project'),
+  tech('vue', 'Vue + Vite', 'javascript typescript', 'Provides a small SPA with templates and a lean build pipeline.', 'An SSR layer or pre-render step is needed for SEO-critical pages.', 'https://vuejs.org/guide/quick-start.html'),
+  tech('blazor', 'ASP.NET Core Blazor', 'csharp c#', 'Keeps forms and domain validation in the existing .NET skill set.', 'Interactive Server mode maintains connections. Use static server rendering for simple forms where possible.', 'https://learn.microsoft.com/en-us/aspnet/core/blazor/'),
+  tech('kotlin', 'Native Android (Kotlin + Jetpack)', 'kotlin java', 'Keeps the client close to device storage, camera and Android background-work APIs.', 'An iOS client would need separate implementation.', 'https://developer.android.com/topic/architecture/data-layer/offline-first'),
+  tech('rn', 'React Native', 'typescript javascript', 'Shares mobile application logic and UI across iOS and Android.', 'Verify native dependencies, background sync, and device memory on physical hardware.', 'https://reactnative.dev/docs/getting-started'),
+  tech('flutter', 'Flutter', 'dart', 'Shares a UI toolkit across mobile and desktop targets.', 'Dart adoption and desktop packaging can lengthen onboarding.', 'https://docs.flutter.dev/platform-integration'),
+  tech('tauri', 'Tauri', 'rust typescript javascript', 'Packages a web UI with a system webview for desktop.', 'Native capabilities and installers need platform-specific testing.', 'https://v2.tauri.app/'),
+  tech('html', 'HTML + CSS + JavaScript', 'html css javascript', 'Deploys as prebuilt files with minimal runtime and tooling.', 'Shared layouts and content workflows become manual without a generator.', 'https://developer.mozilla.org/en-US/docs/Learn_web_development'),
+];
+
+export const backend = [
+  tech('hono', 'Hono on Cloudflare Workers', 'typescript javascript', 'Routes small HTTP requests with Web Standards APIs and native D1 bindings.', 'CPU-heavy middleware and Node-specific packages may exceed the runtime envelope.', 'https://hono.dev/docs/getting-started/cloudflare-workers'),
+  tech('fastify', 'Node.js + Fastify', 'typescript javascript', 'Uses a compact HTTP service with schema validation and async I/O.', 'CPU-intensive work must leave the event loop.', 'https://fastify.dev/docs/latest/'),
+  tech('nest', 'NestJS', 'typescript javascript', 'Separates business domains into explicit modules and supports WebSocket gateways.', 'More framework structure and runtime overhead than a small Fastify service.', 'https://docs.nestjs.com/'),
+  tech('django', 'Django', 'python', 'Includes migrations, forms and an admin workflow for relational applications.', 'Long-lived realtime and heavy async work need dedicated paths.', 'https://docs.djangoproject.com/'),
+  tech('fastapi', 'FastAPI', 'python', 'Defines typed API contracts with built-in OpenAPI and fits Python ML dependencies.', 'Background work and admin screens need separate implementation.', 'https://fastapi.tiangolo.com/'),
+  tech('spring', 'Spring Boot', 'java kotlin', 'Provides transaction management, mature security integration and module boundaries.', 'Allow more baseline memory than a small Go or Node.js service.', 'https://docs.spring.io/spring-boot/'),
+  tech('dotnet', 'ASP.NET Core', 'csharp c# fsharp', 'Uses .NET identity middleware, SQL Server drivers and typed APIs.', 'The team needs .NET build and runtime familiarity.', 'https://learn.microsoft.com/en-us/aspnet/core/'),
+  tech('go', 'Go (net/http)', 'go golang', 'Supports concurrent network I/O with a compact compiled service.', 'Authentication, migrations and admin workflows require explicit assembly.', 'https://pkg.go.dev/net/http'),
+  tech('laravel', 'Laravel', 'php', 'Combines application routing, ORM and queue primitives in one PHP framework.', 'Long-lived sockets require a separate runtime such as Reverb.', 'https://laravel.com/docs'),
+  tech('rails', 'Ruby on Rails', 'ruby', 'Uses an integrated convention-driven web application and migrations.', 'Background workers and tuning need explicit deployment resources.', 'https://guides.rubyonrails.org/'),
+];
+
+export const regions = {
+  aws: { india: 'ap-south-1 (Mumbai)', eu: 'eu-central-1 (Frankfurt)', us: 'us-east-1 (N. Virginia)' },
+  gcp: { india: 'asia-south1 (Mumbai)', eu: 'europe-west1 (Belgium)', us: 'us-central1 (Iowa)' },
+  azure: { india: 'Central India (Pune)', eu: 'West Europe (Netherlands)', us: 'East US (Virginia)' },
+};
+
+export const assuranceSources = {
+  aws: {
+    hipaa: 'https://aws.amazon.com/compliance/hipaa-eligible-services-reference/',
+    pci_dss: 'https://aws.amazon.com/compliance/services-in-scope/PCI/',
+  },
+  gcp: {
+    hipaa: 'https://docs.cloud.google.com/docs/security/compliance/hipaa',
+    pci_dss: 'https://cloud.google.com/security/compliance/pci-dss',
+  },
+  azure: {
+    hipaa: 'https://learn.microsoft.com/en-us/azure/compliance/offerings/cloud-services-in-audit-scope',
+    pci_dss: 'https://learn.microsoft.com/en-us/azure/compliance/offerings/cloud-services-in-audit-scope',
+  },
+};
+
+const host = (id, provider, model, choice, band, maturity, benefit, tradeoff, source) =>
+  ({ id, provider, model, choice, band, maturity, benefit, tradeoff, source });
+export const hosts = [
+  host('pages', 'edge', 'managed_cloud', 'Cloudflare Pages', [0, 0], 'static', 'Delivers prebuilt public assets without maintaining an application server.', 'Free-plan limits apply. This profile has no private data plane.', 'https://developers.cloudflare.com/pages/platform/limits/'),
+  host('github', 'edge', 'managed_cloud', 'GitHub Pages', [0, 0], 'static', 'Publishes prebuilt files from a repository.', 'Usage limits and commercial hosting restrictions apply.', 'https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits'),
+  host('workers_free', 'edge', 'managed_cloud', 'Cloudflare Workers Free', [0, 0], 'edge_api', 'Runs a small HTTP API without provisioned server instances. Host any static client assets on the same Worker deployment.', 'Requests fail when the daily plan limits are exhausted. Design for a public workload without a contractual uptime target.', 'https://developers.cloudflare.com/workers/platform/limits/'),
+  host('fargate', 'aws', 'managed_cloud', 'Amazon ECS on AWS Fargate', [37, 82], 'regional', 'Runs portable containers behind an Application Load Balancer with no node fleet.', 'The load balancer and always-running task impose a monthly baseline.', 'https://aws.amazon.com/fargate/pricing/'),
+  host('run', 'gcp', 'managed_cloud', 'Google Cloud Run', [6, 30], 'regional', 'Scales HTTP containers with demand and can keep minimum instances warm.', 'WebSockets bill while connected and require reconnects and shared state.', 'https://cloud.google.com/run/docs/triggering/websockets'),
+  host('appservice', 'azure', 'managed_cloud', 'Azure App Service', [25, 64], 'regional', 'Runs managed web applications with deployment slots on eligible plans and private integration options.', 'VNet integration, slots and zone redundancy require the appropriate plan.', 'https://learn.microsoft.com/en-us/azure/app-service/overview-hosting-plans'),
+  host('ec2', 'aws', 'self_hosted_cloud_vm', 'Amazon EC2 + Docker Compose', [17, 58], 'vm', 'Runs a portable stack on AWS-managed virtual hardware.', 'The team owns OS patches, failover, backups and restore drills.', 'https://aws.amazon.com/ec2/pricing/on-demand/'),
+  host('gce', 'gcp', 'self_hosted_cloud_vm', 'Google Compute Engine + Docker Compose', [18, 62], 'vm', 'Runs portable containers with explicit VM and network control.', 'The team operates the host, ingress and recovery.', 'https://cloud.google.com/compute/vm-instance-pricing'),
+  host('azvm', 'azure', 'self_hosted_cloud_vm', 'Azure Virtual Machines + Docker Compose', [20, 67], 'vm', 'Runs a privately networked, operator-managed deployment.', 'The team owns guest patches and backup verification.', 'https://azure.microsoft.com/en-us/pricing/details/virtual-machines/linux/'),
+  host('prem', 'local', 'on_premise', 'Ubuntu Server LTS + Docker Compose', [0, 45], 'local', 'Keeps the full data plane in the approved local facility.', 'Requires existing hardware, patching, power, backups and local operators.', 'https://ubuntu.com/server'),
+  host('air', 'local', 'air_gapped', 'Podman + Ubuntu Server LTS (offline)', [0, 55], 'local', 'Runs OCI images from an approved offline registry or signed transfer bundle.', 'Updates and incident response require a controlled import process.', 'https://docs.podman.io/'),
+];
+
+export const database = [
+  tech('d1', 'Cloudflare D1 Free', 'sql', 'Provides a serverless SQLite-compatible store through a Worker binding.', 'Monitor scanned rows and write amplification. The free plan limits storage per database and daily usage.', 'https://developers.cloudflare.com/d1/platform/limits/'),
+  tech('rds', 'Amazon RDS for PostgreSQL', 'sql', 'Provides transactions, point-in-time recovery and a Multi-AZ option.', 'Database sizing and failover behavior need load and restore tests.', 'https://aws.amazon.com/rds/postgresql/pricing/'),
+  tech('cloudsql', 'Cloud SQL for PostgreSQL', 'sql', 'Provides managed transactions, backups and an optional regional HA topology.', 'Compute, storage and HA produce recurring charges even with idle application instances.', 'https://cloud.google.com/sql/pricing'),
+  tech('azurepg', 'Azure Database for PostgreSQL Flexible Server', 'sql', 'Provides a managed relational store with a zone-redundant option on eligible tiers.', 'Burstable tiers are unsuitable for sustained saturation or HA.', 'https://learn.microsoft.com/en-us/azure/postgresql/high-availability/concepts-high-availability'),
+  tech('azuredb', 'Azure SQL Database', 'csharp sql', 'Keeps T-SQL workflows on a managed relational database.', 'Confirm SQL Server compatibility before moving legacy features.', 'https://learn.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview'),
+  tech('legacySql', 'Existing Microsoft SQL Server', 'csharp sql', 'Reuses the existing relational schema and access controls via a private connection.', 'Database latency and availability depend on the existing site and private network.', 'https://learn.microsoft.com/en-us/lifecycle/products/sql-server-2019'),
+  tech('pg', 'PostgreSQL', 'sql', 'Enforces transactional invariants and supports JSONB, row policies and indexed text search.', 'Self-hosting shifts recovery, upgrades and HA to the team.', 'https://www.postgresql.org/docs/current/sql.html'),
+  tech('maria', 'MariaDB', 'php sql', 'Reuses a MySQL-compatible relational ecosystem with InnoDB transactions.', 'Verify compatibility for engine-specific MySQL syntax and extensions.', 'https://mariadb.com/docs/server'),
+  tech('sqlite', 'SQLite (WAL mode)', 'sql', 'Eliminates a separate database service for a small single-writer installation.', 'Writes serialize. Avoid shared network filesystems and independent write replicas.', 'https://sqlite.org/wal.html'),
+  tech('mongo', 'MongoDB Community Server', 'javascript typescript', 'Stores independently evolving aggregate documents.', 'Cross-document relationships and server operation require more care.', 'https://www.mongodb.com/docs/manual/data-modeling/'),
+  tech('dynamo', 'Amazon DynamoDB', '', 'Scales key-based document access without managing database instances.', 'Queries must be modeled around partition keys. Arbitrary joins and text search require other paths.', 'https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html'),
+];
+
+export const references = {
+  'AWS data classification and protection': 'https://docs.aws.amazon.com/wellarchitected/2022-03-31/framework/sec-07.html',
+  'AWS encryption at rest': 'https://docs.aws.amazon.com/wellarchitected/2024-06-27/framework/sec_protect_data_rest_encrypt.html',
+  'AWS KMS pricing': 'https://aws.amazon.com/kms/pricing/',
+  'Google Cloud KMS pricing': 'https://cloud.google.com/kms/pricing',
+  'Azure Key Vault pricing': 'https://azure.microsoft.com/en-us/pricing/details/key-vault/',
+  'OpenBao operator documentation': 'https://openbao.org/docs/',
+  'Hocuspocus horizontal fanout': 'https://tiptap.dev/docs/hocuspocus/server/extensions/redis',
+  'Hocuspocus binary document persistence': 'https://tiptap.dev/docs/hocuspocus/guides/persistence',
+  'Valkey protocol compatibility': 'https://valkey.io/topics/migration/',
+  'Cloudflare D1 pricing and usage': 'https://developers.cloudflare.com/d1/platform/pricing/',
+  'Cloudflare Workers static assets': 'https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/',
+  'Cloudflare Wrangler deployments': 'https://developers.cloudflare.com/workers/wrangler/commands/#deploy',
+  'AWS Application Load Balancer pricing': 'https://aws.amazon.com/elasticloadbalancing/pricing/',
+  'AWS regions and services': 'https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/',
+  'AWS PCI service scope': 'https://aws.amazon.com/compliance/services-in-scope/PCI/',
+  'AWS SaaS tenant isolation patterns': 'https://docs.aws.amazon.com/whitepapers/latest/saas-tenant-isolation-strategies/saas-tenant-isolation-strategies.html',
+  'AWS HIPAA eligible services': 'https://aws.amazon.com/compliance/hipaa-eligible-services-reference/',
+  'AWS compliance scope': 'https://aws.amazon.com/compliance/services-in-scope/',
+  'GCP Cloud Run price and locations': 'https://cloud.google.com/run/pricing',
+  'GCP compliance resource center': 'https://cloud.google.com/security/compliance',
+  'GCP HIPAA supported services': assuranceSources.gcp.hipaa,
+  'GCP PCI service scope': assuranceSources.gcp.pci_dss,
+  'Azure audit scope': assuranceSources.azure.pci_dss,
+  'Azure region and service availability': 'https://azure.microsoft.com/en-us/explore/global-infrastructure/products-by-region/',
+  'Azure compliance offerings': 'https://learn.microsoft.com/en-us/azure/compliance/offerings/',
+  'Azure Hybrid Connections': 'https://learn.microsoft.com/en-us/azure/app-service/app-service-hybrid-connections',
+  'Entra tenant residency': 'https://learn.microsoft.com/en-us/entra/fundamentals/data-residency',
+  'Keycloak': 'https://www.keycloak.org/documentation',
+  'Keycloak supported data stores': 'https://www.keycloak.org/server/supported-configurations',
+  'Razorpay integration': 'https://razorpay.com/docs/payments/payment-gateway/',
+  'Stripe hosted Checkout': 'https://docs.stripe.com/payments/checkout',
+  'Yjs': 'https://docs.yjs.dev/',
+  'Valkey': 'https://valkey.io/topics/pubsub/',
+  'Redis adapter for Socket.IO': 'https://socket.io/docs/v4/redis-adapter/',
+  'Amazon S3 prices': 'https://aws.amazon.com/s3/pricing/',
+  'Cloud Storage prices': 'https://cloud.google.com/storage/pricing',
+  'Azure Blob prices': 'https://azure.microsoft.com/en-us/pricing/details/storage/blobs/',
+  'AWS internet data transfer': 'https://aws.amazon.com/ec2/pricing/on-demand/',
+  'Google Cloud network pricing': 'https://cloud.google.com/vpc/network-pricing',
+  'Azure bandwidth pricing': 'https://azure.microsoft.com/en-us/pricing/details/bandwidth/',
+  'Pagefind static search': 'https://pagefind.app/docs/',
+  'Cloudflare Pages static request billing': 'https://developers.cloudflare.com/pages/functions/pricing/',
+  'SeaweedFS': 'https://github.com/seaweedfs/seaweedfs',
+  'RabbitMQ': 'https://www.rabbitmq.com/docs',
+  'OpenSearch': 'https://docs.opensearch.org/latest/',
+  'pgvector': 'https://github.com/pgvector/pgvector',
+  'ONNX Runtime': 'https://onnxruntime.ai/docs/',
+  'vLLM': 'https://docs.vllm.ai/',
+  'PyTorch': 'https://docs.pytorch.org/docs/stable/index.html',
+  'GitHub Actions': 'https://docs.github.com/en/actions',
+  'Forgejo Actions': 'https://forgejo.org/docs/latest/user/actions/',
+  'OpenTelemetry': 'https://opentelemetry.io/docs/',
+  'Prometheus': 'https://prometheus.io/docs/introduction/overview/',
+  'Nginx': 'https://nginx.org/en/docs/',
+  'Android offline-first': 'https://developer.android.com/topic/architecture/data-layer/offline-first',
+  'MDN Service Worker API': 'https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API',
+  'Node.js release schedule': 'https://nodejs.org/en/about/previous-releases',
+  'PostgreSQL lifecycle': 'https://www.postgresql.org/support/versioning/',
+  'SQL Server lifecycle': 'https://learn.microsoft.com/en-us/sql/sql-server/end-of-support/sql-server-end-of-support-overview',
+  'RBI payment system data storage circular': 'https://www.rbi.org.in/scripts/NotificationUser.aspx?Id=11244',
+  'MeitY data protection framework': 'https://www.meity.gov.in/data-protection-framework',
+  'GDPR text': 'https://eur-lex.europa.eu/eli/reg/2016/679/oj',
+  'PCI SSC document library': 'https://www.pcisecuritystandards.org/document_library/',
+};

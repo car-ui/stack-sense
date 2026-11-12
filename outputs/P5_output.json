@@ -1,0 +1,419 @@
+{
+  "scenario_id": "P5",
+  "engine_version": "1.4.0",
+  "assumptions": [
+    "context.data_classification defaulted to \"unspecified\".",
+    "context.recovery_point_minutes defaulted to null.",
+    "context.recovery_time_minutes defaulted to null.",
+    "context.recovery_scope defaulted to \"zone_outage\".",
+    "context.peak_requests_per_second defaulted to null.",
+    "context.peak_day_requests defaulted to null.",
+    "context.budget_policy defaulted to \"soft\".",
+    "context.monthly_egress_gb defaulted to null.",
+    "context.search_corpus_gb defaulted to null.",
+    "context.vendor_lock_in defaulted to \"medium\".",
+    "context.data_profile defaulted to \"general\".",
+    "context.residency_region defaulted to \"\".",
+    "Peak request proxy uses 0.25 per peak active client per second.",
+    "Microsoft 365 is an existing integration target, not a new system of record. Enable document links or notifications only after tenant and residency review."
+  ],
+  "validation_errors": [],
+  "status": "ok_with_warnings",
+  "summary": "Start with a hybrid deployment on Azure App Service in Central India (Pune). Keep the data and application layers close and add supporting services only for requested capabilities.",
+  "architecture_style": "hybrid",
+  "architecture_decision": {
+    "style": "hybrid",
+    "justification": "Use managed application compute and retain the existing database for the first release. This avoids a database migration while the team delivers the application.",
+    "driven_by": [
+      "infrastructure.existing_systems",
+      "infrastructure.deployment_model",
+      "team.size",
+      "timeline.mvp_weeks"
+    ],
+    "data_flow": [
+      "Authenticate staff at application ingress.",
+      "Open a TLS-protected private path from the app to the existing SQL Server.",
+      "Keep the existing database authoritative and verify its backup placement."
+    ],
+    "alternatives": [
+      {
+        "choice": "Cloud-only application and migrated database",
+        "why_not": "Schema compatibility, data migration and cutover add work before launch."
+      }
+    ],
+    "tradeoffs": [
+      "The private link and local database become dependencies in the end-to-end availability budget."
+    ],
+    "source": "https://learn.microsoft.com/en-us/azure/app-service/app-service-hybrid-connections"
+  },
+  "stack": {
+    "frontend": {
+      "choice": "ASP.NET Core Blazor",
+      "justification": "Keeps forms and domain validation in the existing .NET skill set. Form-heavy internal pages benefit from shared .NET models. The team already lists csharp. Shared .NET models fit the existing Microsoft data environment.",
+      "driven_by": [
+        "project.type",
+        "team.languages",
+        "infrastructure.existing_systems"
+      ],
+      "alternatives": [
+        {
+          "choice": "Vue + Vite",
+          "why_not": "It scored 8 points lower on combined fit. Form-heavy internal pages benefit from shared .NET models. Shared .NET models fit the existing Microsoft data environment. The alternative gained points on project.platforms.",
+          "score_gap": 8,
+          "factors": [
+            {
+              "field": "project.type",
+              "points": 14,
+              "selected": [
+                "Form-heavy internal pages benefit from shared .NET models."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "project.platforms",
+              "points": -8,
+              "selected": [],
+              "alternative": [
+                "Interactive web views can ship as immutable assets."
+              ]
+            },
+            {
+              "field": "infrastructure.existing_systems",
+              "points": 5,
+              "selected": [
+                "Shared .NET models fit the existing Microsoft data environment."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "timeline.mvp_weeks",
+              "points": -3,
+              "selected": [],
+              "alternative": [
+                "A compact template workflow helps deliver a short MVP."
+              ]
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "Interactive Server mode maintains connections. Use static server rendering for simple forms where possible."
+      ],
+      "source": "https://learn.microsoft.com/en-us/aspnet/core/blazor/",
+      "fit_score": 28
+    },
+    "backend": {
+      "choice": "ASP.NET Core",
+      "justification": "Uses .NET identity middleware, SQL Server drivers and typed APIs. Use the supported SQL Server driver and enterprise integration path. The team already lists csharp. OIDC middleware integrates with enterprise identity. A single deployable API keeps the initial service boundary explicit.",
+      "driven_by": [
+        "infrastructure.existing_systems",
+        "team.languages",
+        "requirements.auth",
+        "project.type"
+      ],
+      "alternatives": [
+        {
+          "choice": "Node.js + Fastify",
+          "why_not": "It scored 10 points lower on combined fit. Use the supported SQL Server driver and enterprise integration path. OIDC middleware integrates with enterprise identity. The alternative gained points on team.size.",
+          "score_gap": 10,
+          "factors": [
+            {
+              "field": "infrastructure.existing_systems",
+              "points": 11,
+              "selected": [
+                "Use the supported SQL Server driver and enterprise integration path."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "team.size",
+              "points": -6,
+              "selected": [],
+              "alternative": [
+                "A small HTTP surface keeps initial operational work low."
+              ]
+            },
+            {
+              "field": "requirements.auth",
+              "points": 5,
+              "selected": [
+                "OIDC middleware integrates with enterprise identity."
+              ],
+              "alternative": []
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "The team needs .NET build and runtime familiarity."
+      ],
+      "source": "https://learn.microsoft.com/en-us/aspnet/core/",
+      "fit_score": 26
+    },
+    "database": {
+      "choice": "Existing Microsoft SQL Server",
+      "justification": "Reuses the existing relational schema and access controls via a private connection. Reuse the existing database via a TLS-protected private path; verify its facility and backups match residency. The data layer is paired with the selected deployment model.",
+      "driven_by": [
+        "infrastructure.existing_systems",
+        "scale.workload"
+      ],
+      "alternatives": [
+        {
+          "choice": "Azure SQL Database",
+          "why_not": "It scored 21 points lower on combined fit. Reuse the existing database via a TLS-protected private path; verify its facility and backups match residency. The alternative gained points on team.languages.",
+          "score_gap": 21,
+          "factors": [
+            {
+              "field": "infrastructure.existing_systems",
+              "points": 30,
+              "selected": [
+                "Reuse the existing database via a TLS-protected private path; verify its facility and backups match residency."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "team.languages",
+              "points": -9,
+              "selected": [],
+              "alternative": [
+                "T-SQL and .NET reduce data-layer retraining."
+              ]
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "Database latency and availability depend on the existing site and private network."
+      ],
+      "source": "https://learn.microsoft.com/en-us/lifecycle/products/sql-server-2019",
+      "fit_score": 33
+    },
+    "hosting": {
+      "choice": "Azure App Service",
+      "justification": "Runs managed web applications with deployment slots on eligible plans and private integration options. Hybrid Connections or private networking can reach the existing SQL endpoint. Managed compute reduces infrastructure maintenance for the team. Retains the explicit AZURE provider. Fits the requested managed cloud model. The modeled USD 39–130 per month affects ranking. Placement: Central India (Pune).",
+      "driven_by": [
+        "infrastructure.existing_systems",
+        "team.has_devops",
+        "infrastructure.cloud_preference",
+        "infrastructure.deployment_model",
+        "budget.monthly_infra_usd"
+      ],
+      "alternatives": [
+        {
+          "choice": "Cloudflare Pages",
+          "why_not": "Conflicts with the explicit provider."
+        }
+      ],
+      "tradeoffs": [
+        "VNet integration, slots and zone redundancy require the appropriate plan."
+      ],
+      "source": "https://learn.microsoft.com/en-us/azure/app-service/overview-hosting-plans",
+      "fit_score": 38.06
+    },
+    "supporting": [
+      {
+        "layer": "auth",
+        "choice": "Microsoft Entra ID (existing tenant)",
+        "justification": "Use OIDC or SAML with scoped group-to-role mapping and least-privilege service identities. Confirm tenant residency and map application roles to existing groups.",
+        "driven_by": [
+          "requirements.auth",
+          "infrastructure.existing_systems",
+          "infrastructure.data_residency"
+        ],
+        "alternatives": [
+          {
+            "choice": "Keycloak",
+            "why_not": "An additional identity realm duplicates the existing enterprise directory."
+          }
+        ],
+        "tradeoffs": [
+          "Account lifecycle, recovery and federation scopes require explicit configuration."
+        ]
+      },
+      {
+        "layer": "storage",
+        "choice": "Azure Blob Storage",
+        "justification": "Use a private bucket in the same region as the API with short-lived signed uploads and encryption.",
+        "driven_by": [
+          "requirements.file_media_storage",
+          "infrastructure.data_residency",
+          "requirements.offline_support"
+        ],
+        "alternatives": [
+          {
+            "choice": "Database BLOB columns",
+            "why_not": "Independent object retention and direct upload reduce transactional I/O."
+          }
+        ],
+        "tradeoffs": [
+          "Lifecycle rules and egress need budgeting and review."
+        ]
+      },
+      {
+        "layer": "ci_cd",
+        "choice": "Forgejo Actions (private runner)",
+        "justification": "Build and scan signed images on an approved runner, keeping artifacts and credentials in the boundary.",
+        "driven_by": [
+          "team.size",
+          "infrastructure.deployment_model",
+          "infrastructure.data_residency"
+        ],
+        "alternatives": [
+          {
+            "choice": "GitHub-hosted runners",
+            "why_not": "A public runner is outside the selected boundary."
+          }
+        ],
+        "tradeoffs": [
+          "Pin actions and lock deployment credentials to the minimum scope."
+        ]
+      }
+    ]
+  },
+  "deployment": {
+    "provider": "azure",
+    "region": "Central India (Pune)",
+    "model": "managed_cloud",
+    "boundary": {
+      "region": "Central India (Pune)",
+      "core_data_services": [
+        "Azure App Service",
+        "Existing Microsoft SQL Server",
+        "Azure Blob Storage"
+      ],
+      "launch_gates": [
+        {
+          "gate": "iso27001",
+          "check": "Confirm certification scope and document the customer control responsibilities."
+        },
+        {
+          "gate": "identity_processor",
+          "check": "Verify identity or messaging processor region, metadata flows and contract before enabling the integration."
+        }
+      ]
+    }
+  },
+  "decision_trace": {
+    "eligible_hosting": [
+      {
+        "choice": "Azure App Service",
+        "database": "Existing Microsoft SQL Server",
+        "min_usd": 39,
+        "max_usd": 130,
+        "fit_score": 38.06,
+        "selected": true
+      }
+    ],
+    "excluded_hosting": [
+      {
+        "choice": "Cloudflare Pages",
+        "reason": "Conflicts with the explicit provider."
+      },
+      {
+        "choice": "GitHub Pages",
+        "reason": "Conflicts with the explicit provider."
+      },
+      {
+        "choice": "Cloudflare Workers Free",
+        "reason": "Conflicts with the explicit provider."
+      },
+      {
+        "choice": "Amazon ECS on AWS Fargate",
+        "reason": "Conflicts with the explicit provider."
+      },
+      {
+        "choice": "Google Cloud Run",
+        "reason": "Conflicts with the explicit provider."
+      },
+      {
+        "choice": "Amazon EC2 + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Google Compute Engine + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Azure Virtual Machines + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Ubuntu Server LTS + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Podman + Ubuntu Server LTS (offline)",
+        "reason": "Requires a different deployment model."
+      }
+    ]
+  },
+  "estimated_monthly_cost_usd": {
+    "min": 39,
+    "max": 130,
+    "breakdown": [
+      {
+        "driver": "Ingress + compute",
+        "min": 25,
+        "max": 64
+      },
+      {
+        "driver": "Database capacity + backups",
+        "min": 5,
+        "max": 25
+      },
+      {
+        "driver": "Object storage + baseline media transfer",
+        "min": 0.5,
+        "max": 2
+      },
+      {
+        "driver": "Hybrid relay and private connectivity",
+        "min": 8,
+        "max": 28
+      },
+      {
+        "driver": "General networking and telemetry allowance",
+        "min": 1,
+        "max": 8
+      }
+    ],
+    "budget_usd": 300,
+    "budget_fit": "within_budget",
+    "budget_policy": "soft",
+    "assumptions": [
+      "Illustrative monthly USD operating band. Inputs are sizing proxies, not a measured request or billing forecast.",
+      "Peak proxy: 300 concurrent clients, 75 requests or realtime events per second and 20 GB total data.",
+      "Placement: Central India (Pune). Starts with modest regional capacity and backups.",
+      "Excludes taxes, team labor, initial hardware, domain purchases and transaction fees. Media and OTP allowances are modeled separately when requested.",
+      "Heavy internet egress is outside the baseline. Provide a monthly estimate to price it explicitly."
+    ]
+  },
+  "warnings": [
+    {
+      "code": "AUDIT_PROGRAM",
+      "severity": "info",
+      "message": "Map controls, provider attestations, scope, access reviews and operational evidence. The organisation owns its audit or certification.",
+      "fields": [
+        "compliance"
+      ]
+    },
+    {
+      "code": "PRIVATE_SQL_PATH",
+      "severity": "info",
+      "message": "Validate network path, TLS, backups and disaster recovery for the existing SQL Server. Use a least-privilege account and a supported driver.",
+      "fields": [
+        "infrastructure.existing_systems",
+        "infrastructure.data_residency"
+      ]
+    },
+    {
+      "code": "IDENTITY_BOUNDARY",
+      "severity": "warning",
+      "message": "Validate the existing Entra tenant geography, directory feature residency and metadata processing before using it for regulated or resident data.",
+      "fields": [
+        "infrastructure.existing_systems",
+        "infrastructure.data_residency"
+      ]
+    }
+  ]
+}

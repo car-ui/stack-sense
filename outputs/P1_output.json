@@ -1,0 +1,279 @@
+{
+  "scenario_id": "P1",
+  "engine_version": "1.4.0",
+  "assumptions": [
+    "context.data_classification defaulted to \"unspecified\".",
+    "context.recovery_point_minutes defaulted to null.",
+    "context.recovery_time_minutes defaulted to null.",
+    "context.recovery_scope defaulted to \"zone_outage\".",
+    "context.peak_requests_per_second defaulted to null.",
+    "context.peak_day_requests defaulted to null.",
+    "context.budget_policy defaulted to \"soft\".",
+    "context.monthly_egress_gb defaulted to null.",
+    "context.search_corpus_gb defaulted to null.",
+    "context.vendor_lock_in defaulted to \"medium\".",
+    "context.data_profile defaulted to \"general\".",
+    "context.residency_region defaulted to \"\".",
+    "Peak request proxy uses 0.25 per peak active client per second."
+  ],
+  "validation_errors": [],
+  "status": "ok",
+  "summary": "Publish prebuilt pages through Cloudflare Pages. The site needs neither a dynamic API nor a runtime database.",
+  "architecture_style": "static",
+  "architecture_decision": {
+    "style": "static",
+    "justification": "Build public pages ahead of time. The content and read-heavy workload can be served as immutable files without an application process.",
+    "driven_by": [
+      "project.type",
+      "scale.workload",
+      "requirements.auth"
+    ],
+    "data_flow": [
+      "Build published content and version the output.",
+      "Serve the release from the selected static ingress.",
+      "Read public assets directly in the browser."
+    ],
+    "alternatives": [
+      {
+        "choice": "Server-rendered application",
+        "why_not": "An always-on application and data store would add operations without a runtime write path."
+      }
+    ],
+    "tradeoffs": [
+      "Content changes require a new build and release."
+    ],
+    "source": "https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles"
+  },
+  "stack": {
+    "frontend": {
+      "choice": "Astro",
+      "justification": "Pre-renders content and ships JavaScript only for interactive islands. Content pages can be built before traffic arrives. The team already lists javascript.",
+      "driven_by": [
+        "project.type",
+        "team.languages"
+      ],
+      "alternatives": [
+        {
+          "choice": "Next.js",
+          "why_not": "It scored 4 points lower on combined fit. Content pages can be built before traffic arrives. The alternative gained points on requirements.seo_critical.",
+          "score_gap": 4,
+          "factors": [
+            {
+              "field": "project.type",
+              "points": 18,
+              "selected": [
+                "Content pages can be built before traffic arrives."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "requirements.seo_critical",
+              "points": -14,
+              "selected": [],
+              "alternative": [
+                "SEO-critical pages need crawlable HTML."
+              ]
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "Interactive pages still need deliberate hydration boundaries."
+      ],
+      "source": "https://docs.astro.build/en/concepts/why-astro/",
+      "fit_score": 26
+    },
+    "backend": {
+      "choice": "None",
+      "justification": "The public site can be built ahead of time and served as files.",
+      "driven_by": [
+        "project.type",
+        "requirements.auth",
+        "scale.workload"
+      ],
+      "alternatives": [
+        {
+          "choice": "Node.js + Fastify",
+          "why_not": "A server would add cost and patching without application writes or authentication."
+        }
+      ],
+      "tradeoffs": [
+        "New requirements may introduce this layer."
+      ]
+    },
+    "database": {
+      "choice": "None",
+      "justification": "Keep content in version-controlled files or Markdown.",
+      "driven_by": [
+        "project.type",
+        "scale.workload"
+      ],
+      "alternatives": [
+        {
+          "choice": "PostgreSQL",
+          "why_not": "A live database adds no value for build-time pages."
+        }
+      ],
+      "tradeoffs": [
+        "New requirements may introduce this layer."
+      ]
+    },
+    "hosting": {
+      "choice": "Cloudflare Pages",
+      "justification": "Delivers prebuilt public assets without maintaining an application server. Public files do not need an always-on server. Managed compute reduces infrastructure maintenance for the team. Fits the requested managed cloud model. Cloudflare Pages serves static requests without metering them against Functions quotas. Placement: public edge.",
+      "driven_by": [
+        "project.type",
+        "team.has_devops",
+        "infrastructure.deployment_model",
+        "scale.traffic_pattern"
+      ],
+      "alternatives": [
+        {
+          "choice": "GitHub Pages",
+          "why_not": "It scored 2 points lower on combined fit. Cloudflare Pages serves static requests without metering them against Functions quotas.",
+          "score_gap": 2,
+          "factors": [
+            {
+              "field": "scale.traffic_pattern",
+              "points": 2,
+              "selected": [
+                "Cloudflare Pages serves static requests without metering them against Functions quotas."
+              ],
+              "alternative": []
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "Free-plan limits apply. This profile has no private data plane."
+      ],
+      "source": "https://developers.cloudflare.com/pages/platform/limits/",
+      "fit_score": 45
+    },
+    "supporting": [
+      {
+        "layer": "cdn",
+        "choice": "Cloudflare Pages delivery",
+        "justification": "Serve public build assets through the hosting provider and keep private data out of the published bundle.",
+        "driven_by": [
+          "project.type",
+          "scale.workload"
+        ],
+        "alternatives": [
+          {
+            "choice": "Amazon CloudFront",
+            "why_not": "The bundled delivery path avoids a separate distribution."
+          }
+        ],
+        "tradeoffs": [
+          "Public assets are cached internationally and subject to platform quotas."
+        ]
+      }
+    ]
+  },
+  "deployment": {
+    "provider": "edge",
+    "region": "public edge",
+    "model": "managed_cloud",
+    "boundary": {
+      "region": "public edge",
+      "core_data_services": [
+        "Cloudflare Pages"
+      ],
+      "launch_gates": []
+    }
+  },
+  "decision_trace": {
+    "eligible_hosting": [
+      {
+        "choice": "Cloudflare Pages",
+        "database": "None",
+        "min_usd": 0,
+        "max_usd": 0,
+        "fit_score": 45,
+        "selected": true
+      },
+      {
+        "choice": "GitHub Pages",
+        "database": "None",
+        "min_usd": 0,
+        "max_usd": 0,
+        "fit_score": 43,
+        "selected": false
+      },
+      {
+        "choice": "Google Cloud Run",
+        "database": "None",
+        "min_usd": 7,
+        "max_usd": 40,
+        "fit_score": -11.59,
+        "selected": false
+      },
+      {
+        "choice": "Azure App Service",
+        "database": "None",
+        "min_usd": 26,
+        "max_usd": 75,
+        "fit_score": -12.26,
+        "selected": false
+      },
+      {
+        "choice": "Amazon ECS on AWS Fargate",
+        "database": "None",
+        "min_usd": 38,
+        "max_usd": 90,
+        "fit_score": -12.6,
+        "selected": false
+      }
+    ],
+    "excluded_hosting": [
+      {
+        "choice": "Cloudflare Workers Free",
+        "reason": "Reserved for small public web apps and HTTP APIs with persistent reads."
+      },
+      {
+        "choice": "Amazon EC2 + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Google Compute Engine + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Azure Virtual Machines + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Ubuntu Server LTS + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Podman + Ubuntu Server LTS (offline)",
+        "reason": "Requires a different deployment model."
+      }
+    ]
+  },
+  "estimated_monthly_cost_usd": {
+    "min": 0,
+    "max": 0,
+    "breakdown": [
+      {
+        "driver": "Ingress + compute",
+        "min": 0,
+        "max": 0
+      }
+    ],
+    "budget_usd": 0,
+    "budget_fit": "within_budget",
+    "budget_policy": "soft",
+    "assumptions": [
+      "Illustrative monthly USD operating band. Inputs are sizing proxies, not a measured request or billing forecast.",
+      "Peak proxy: 50 concurrent clients, 13 requests or realtime events per second and 1 GB total data.",
+      "Placement: public edge. Starts with modest regional capacity and backups.",
+      "Excludes taxes, team labor, initial hardware, domain purchases and transaction fees. Media and OTP allowances are modeled separately when requested.",
+      "Heavy internet egress is outside the baseline. Provide a monthly estimate to price it explicitly.",
+      "Assumes build and transfer remain within public static hosting quotas."
+    ]
+  },
+  "warnings": []
+}

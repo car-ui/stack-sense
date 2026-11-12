@@ -1,0 +1,525 @@
+{
+  "scenario_id": "P3",
+  "engine_version": "1.4.0",
+  "assumptions": [
+    "context.data_classification defaulted to \"unspecified\".",
+    "context.recovery_point_minutes defaulted to null.",
+    "context.recovery_time_minutes defaulted to null.",
+    "context.recovery_scope defaulted to \"zone_outage\".",
+    "context.peak_requests_per_second defaulted to null.",
+    "context.peak_day_requests defaulted to null.",
+    "context.budget_policy defaulted to \"soft\".",
+    "context.monthly_egress_gb defaulted to null.",
+    "context.search_corpus_gb defaulted to null.",
+    "context.vendor_lock_in defaulted to \"medium\".",
+    "context.data_profile defaulted to \"general\".",
+    "context.residency_region defaulted to \"\".",
+    "Selected an EU data plane for GDPR risk reduction when no residency was specified.",
+    "Peak request proxy uses 0.6 per peak active client per second."
+  ],
+  "validation_errors": [],
+  "status": "ok_with_warnings",
+  "summary": "Start with a service oriented deployment on Amazon ECS on AWS Fargate in eu-central-1 (Frankfurt). Separate durable records from ephemeral socket traffic.",
+  "architecture_style": "service_oriented",
+  "architecture_decision": {
+    "style": "service_oriented",
+    "justification": "Separate the long-lived connection path from the request-response API so the two can scale and roll out independently at 5000 peak concurrent users.",
+    "driven_by": [
+      "requirements.realtime",
+      "scale.peak_concurrent_users"
+    ],
+    "data_flow": [
+      "Route HTTP requests and authenticated socket upgrades to separate application services.",
+      "Persist binary Yjs state in the database and distribute updates and presence through regional fanout.",
+      "Reconnect clients after a rollout and verify recovery under peak connection load."
+    ],
+    "alternatives": [
+      {
+        "choice": "Single application process",
+        "why_not": "Persistent connections would share resource and rollout limits with the API."
+      }
+    ],
+    "tradeoffs": [
+      "Independent gateway scaling adds a deployment and coordination path. Benchmark hot rooms because shared fanout can duplicate work."
+    ],
+    "source": "https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/web-queue-worker"
+  },
+  "stack": {
+    "frontend": {
+      "choice": "React + Vite",
+      "justification": "Serves an interactive client as static assets and keeps API deployment independent. Interactive web views can ship as immutable assets. The client can keep frequent updates isolated in interactive views. The team already lists typescript.",
+      "driven_by": [
+        "project.platforms",
+        "requirements.realtime",
+        "team.languages"
+      ],
+      "alternatives": [
+        {
+          "choice": "Vue + Vite",
+          "why_not": "It scored 6 points lower on combined fit. The client can keep frequent updates isolated in interactive views.",
+          "score_gap": 6,
+          "factors": [
+            {
+              "field": "requirements.realtime",
+              "points": 6,
+              "selected": [
+                "The client can keep frequent updates isolated in interactive views."
+              ],
+              "alternative": []
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "Client rendering alone is a poor default for indexable pages."
+      ],
+      "source": "https://react.dev/learn/start-a-new-react-project",
+      "fit_score": 19
+    },
+    "backend": {
+      "choice": "NestJS",
+      "justification": "Separates business domains into explicit modules and supports WebSocket gateways. Explicit modules separate socket events, accounts and business logic. The team already lists typescript. Request guards can centralize tenant context and authorization. A single deployable API keeps the initial service boundary explicit.",
+      "driven_by": [
+        "requirements.realtime",
+        "team.languages",
+        "requirements.multi_tenant",
+        "project.type"
+      ],
+      "alternatives": [
+        {
+          "choice": "Go (net/http)",
+          "why_not": "It scored 3 points lower on combined fit. Explicit modules separate socket events, accounts and business logic. Request guards can centralize tenant context and authorization. The alternative gained points on requirements.p95_latency_ms.",
+          "score_gap": 3,
+          "factors": [
+            {
+              "field": "requirements.p95_latency_ms",
+              "points": -9,
+              "selected": [],
+              "alternative": [
+                "A compact service and concurrent I/O suit tight response-time targets."
+              ]
+            },
+            {
+              "field": "requirements.realtime",
+              "points": 8,
+              "selected": [
+                "Explicit modules separate socket events, accounts and business logic."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "requirements.multi_tenant",
+              "points": 4,
+              "selected": [
+                "Request guards can centralize tenant context and authorization."
+              ],
+              "alternative": []
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "More framework structure and runtime overhead than a small Fastify service."
+      ],
+      "source": "https://docs.nestjs.com/",
+      "fit_score": 18
+    },
+    "database": {
+      "choice": "Amazon RDS for PostgreSQL",
+      "justification": "Provides transactions, point-in-time recovery and a Multi-AZ option. Enforce tenant keys and row-level policies alongside application checks. SQL transactions fit durable state and indexed access. The data layer is paired with the selected deployment model.",
+      "driven_by": [
+        "requirements.multi_tenant",
+        "scale.workload"
+      ],
+      "alternatives": [
+        {
+          "choice": "Self-managed PostgreSQL",
+          "why_not": "Changing database ownership would add operations or cross the selected deployment boundary."
+        }
+      ],
+      "tradeoffs": [
+        "Database sizing and failover behavior need load and restore tests."
+      ],
+      "source": "https://aws.amazon.com/rds/postgresql/pricing/",
+      "fit_score": 16
+    },
+    "hosting": {
+      "choice": "Amazon ECS on AWS Fargate",
+      "justification": "Runs portable containers behind an Application Load Balancer with no node fleet. Always-on container tasks avoid scale-to-zero and request time limits on persistent connections. Fits the requested managed cloud model. Place the data plane and backups in the selected geography. The high end could exceed the budget. The modeled USD 722–1980 per month affects ranking. Placement: eu-central-1 (Frankfurt).",
+      "driven_by": [
+        "requirements.realtime",
+        "infrastructure.deployment_model",
+        "infrastructure.data_residency",
+        "budget.monthly_infra_usd"
+      ],
+      "alternatives": [
+        {
+          "choice": "Azure App Service",
+          "why_not": "It scored 9.76 points lower on combined fit. Always-on container tasks avoid scale-to-zero and request time limits on persistent connections. The alternative gained points on budget.monthly_infra_usd.",
+          "score_gap": 9.76,
+          "factors": [
+            {
+              "field": "requirements.realtime",
+              "points": 10,
+              "selected": [
+                "Always-on container tasks avoid scale-to-zero and request time limits on persistent connections."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "budget.monthly_infra_usd",
+              "points": -0.24,
+              "selected": [
+                "The high end could exceed the budget.",
+                "The modeled USD 722–1980 per month affects ranking."
+              ],
+              "alternative": [
+                "The high end could exceed the budget.",
+                "The modeled USD 628–1875 per month affects ranking."
+              ]
+            }
+          ]
+        }
+      ],
+      "tradeoffs": [
+        "The load balancer and always-running task impose a monthly baseline."
+      ],
+      "source": "https://aws.amazon.com/fargate/pricing/",
+      "fit_score": 10.74
+    },
+    "supporting": [
+      {
+        "layer": "auth",
+        "choice": "Keycloak",
+        "justification": "Broker an approved OIDC identity provider and keep application roles in the local realm. Deploy the identity realm and its database in the selected region. Use a separate logical database or schema with its own account on the selected relational platform.",
+        "driven_by": [
+          "requirements.auth",
+          "infrastructure.existing_systems",
+          "infrastructure.data_residency"
+        ],
+        "alternatives": [
+          {
+            "choice": "Microsoft Entra ID",
+            "why_not": "An external directory adds an account and an independent data plane."
+          }
+        ],
+        "tradeoffs": [
+          "Account lifecycle, recovery and federation scopes require explicit configuration."
+        ]
+      },
+      {
+        "layer": "storage",
+        "choice": "Amazon S3",
+        "justification": "Use a private bucket in the same region as the API with short-lived signed uploads and encryption.",
+        "driven_by": [
+          "requirements.file_media_storage",
+          "infrastructure.data_residency",
+          "requirements.offline_support"
+        ],
+        "alternatives": [
+          {
+            "choice": "Database BLOB columns",
+            "why_not": "Independent object retention and direct upload reduce transactional I/O."
+          }
+        ],
+        "tradeoffs": [
+          "Lifecycle rules and egress need budgeting and review."
+        ]
+      },
+      {
+        "layer": "realtime",
+        "choice": "Yjs + Hocuspocus",
+        "justification": "Authorize each document and store binary Yjs state through the Database extension. Use the Redis extension with regional Valkey for cross-instance fanout. Test the persistence interval and reconnect behavior.",
+        "driven_by": [
+          "requirements.realtime",
+          "project.type",
+          "requirements.p95_latency_ms"
+        ],
+        "alternatives": [
+          {
+            "choice": "WebSocket transport without a CRDT",
+            "why_not": "Transport alone does not resolve concurrent document edits."
+          }
+        ],
+        "tradeoffs": [
+          "Fanout delivers each update to the other instances. Hot-room load and the interval between durable writes need measurement."
+        ]
+      },
+      {
+        "layer": "cache",
+        "choice": "Valkey",
+        "justification": "Use region-local pub/sub for cross-replica fanout. Keep persistent events and snapshots in the database.",
+        "driven_by": [
+          "scale.peak_concurrent_users",
+          "scale.workload",
+          "requirements.realtime"
+        ],
+        "alternatives": [
+          {
+            "choice": "In-process memory cache",
+            "why_not": "Independent replicas need shared fanout or cache state."
+          }
+        ],
+        "tradeoffs": [
+          "Pub/sub is ephemeral. Bound memory and provision failover separately."
+        ]
+      },
+      {
+        "layer": "queue",
+        "choice": "RabbitMQ",
+        "justification": "Buffer asynchronous work outside request handling using acknowledgements, bounded retries and dead-letter queues.",
+        "driven_by": [
+          "requirements.payments",
+          "scale.workload",
+          "team.size"
+        ],
+        "alternatives": [
+          {
+            "choice": "Database polling worker",
+            "why_not": "A separate broker isolates higher-volume background work from database read paths."
+          }
+        ],
+        "tradeoffs": [
+          "Assume at-least-once delivery and make all handlers idempotent."
+        ]
+      },
+      {
+        "layer": "payments",
+        "choice": "Stripe hosted Checkout",
+        "justification": "Tokenize payment details via hosted checkout. Verify webhook signatures and reconcile settlement against local records.",
+        "driven_by": [
+          "requirements.payments",
+          "infrastructure.data_residency",
+          "compliance"
+        ],
+        "alternatives": [
+          {
+            "choice": "Direct card data capture",
+            "why_not": "Hosted collection reduces card-data exposure and audit scope."
+          }
+        ],
+        "tradeoffs": [
+          "Country eligibility, merchant underwriting, fees and processor data scope require approval."
+        ]
+      },
+      {
+        "layer": "observability",
+        "choice": "OpenTelemetry + Prometheus",
+        "justification": "Record request percentiles, saturation, errors and queue lag locally. Redact payloads before collection.",
+        "driven_by": [
+          "requirements.availability",
+          "requirements.p95_latency_ms",
+          "compliance"
+        ],
+        "alternatives": [
+          {
+            "choice": "External APM SaaS",
+            "why_not": "Self-operated telemetry keeps operational data within the selected boundary."
+          }
+        ],
+        "tradeoffs": [
+          "Manage log/metric cardinality, retention and actionable alerts."
+        ]
+      },
+      {
+        "layer": "ci_cd",
+        "choice": "Forgejo Actions (private runner)",
+        "justification": "Build and scan signed images on an approved runner, keeping artifacts and credentials in the boundary.",
+        "driven_by": [
+          "team.size",
+          "infrastructure.deployment_model",
+          "infrastructure.data_residency"
+        ],
+        "alternatives": [
+          {
+            "choice": "GitHub-hosted runners",
+            "why_not": "A public runner is outside the selected boundary."
+          }
+        ],
+        "tradeoffs": [
+          "Pin actions and lock deployment credentials to the minimum scope."
+        ]
+      }
+    ]
+  },
+  "deployment": {
+    "provider": "aws",
+    "region": "eu-central-1 (Frankfurt)",
+    "model": "managed_cloud",
+    "boundary": {
+      "region": "eu-central-1 (Frankfurt)",
+      "core_data_services": [
+        "Amazon ECS on AWS Fargate",
+        "Amazon RDS for PostgreSQL",
+        "Amazon S3"
+      ],
+      "launch_gates": [
+        {
+          "gate": "gdpr",
+          "check": "Review processor agreements, cross-border transfer mechanisms, retention and data-subject workflows."
+        },
+        {
+          "gate": "payment_processor",
+          "check": "Confirm merchant-country eligibility, settlement rails, processor data geography and contracts before enabling live transactions."
+        },
+        {
+          "gate": "identity_processor",
+          "check": "Verify identity or messaging processor region, metadata flows and contract before enabling the integration."
+        }
+      ]
+    }
+  },
+  "decision_trace": {
+    "eligible_hosting": [
+      {
+        "choice": "Amazon ECS on AWS Fargate",
+        "database": "Amazon RDS for PostgreSQL",
+        "min_usd": 722,
+        "max_usd": 1980,
+        "fit_score": 10.74,
+        "selected": true
+      },
+      {
+        "choice": "Azure App Service",
+        "database": "Azure Database for PostgreSQL Flexible Server",
+        "min_usd": 628,
+        "max_usd": 1875,
+        "fit_score": 0.98,
+        "selected": false
+      },
+      {
+        "choice": "Google Cloud Run",
+        "database": "Cloud SQL for PostgreSQL",
+        "min_usd": 433,
+        "max_usd": 1460,
+        "fit_score": 0.72,
+        "selected": false
+      }
+    ],
+    "excluded_hosting": [
+      {
+        "choice": "Cloudflare Pages",
+        "reason": "Public edge hosting lacks the required runtime or regional control."
+      },
+      {
+        "choice": "GitHub Pages",
+        "reason": "Public edge hosting lacks the required runtime or regional control."
+      },
+      {
+        "choice": "Cloudflare Workers Free",
+        "reason": "No catalogued region matches the data geography."
+      },
+      {
+        "choice": "Amazon EC2 + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Google Compute Engine + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Azure Virtual Machines + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Ubuntu Server LTS + Docker Compose",
+        "reason": "Requires a different deployment model."
+      },
+      {
+        "choice": "Podman + Ubuntu Server LTS (offline)",
+        "reason": "Requires a different deployment model."
+      }
+    ]
+  },
+  "estimated_monthly_cost_usd": {
+    "min": 722,
+    "max": 1980,
+    "breakdown": [
+      {
+        "driver": "Ingress + API compute",
+        "min": 224.82,
+        "max": 498.26
+      },
+      {
+        "driver": "Realtime gateway compute",
+        "min": 96.35,
+        "max": 213.54
+      },
+      {
+        "driver": "Database capacity + backups",
+        "min": 179.69,
+        "max": 499.13
+      },
+      {
+        "driver": "Object storage + baseline media transfer",
+        "min": 5,
+        "max": 20
+      },
+      {
+        "driver": "Valkey capacity and fanout",
+        "min": 104.17,
+        "max": 295.14
+      },
+      {
+        "driver": "Identity service capacity",
+        "min": 17.36,
+        "max": 78.12
+      },
+      {
+        "driver": "RabbitMQ broker + workers",
+        "min": 69.44,
+        "max": 217.01
+      },
+      {
+        "driver": "Metrics storage + retained logs",
+        "min": 17.36,
+        "max": 86.8
+      },
+      {
+        "driver": "General networking and telemetry allowance",
+        "min": 8.68,
+        "max": 69.44
+      }
+    ],
+    "budget_usd": 1500,
+    "budget_fit": "overlaps_budget",
+    "budget_policy": "soft",
+    "assumptions": [
+      "Illustrative monthly USD operating band. Inputs are sizing proxies, not a measured request or billing forecast.",
+      "Peak proxy: 5000 concurrent clients, 3000 requests or realtime events per second and 200 GB total data.",
+      "Placement: eu-central-1 (Frankfurt). Starts with modest regional capacity and backups.",
+      "Excludes taxes, team labor, initial hardware, domain purchases and transaction fees. Media and OTP allowances are modeled separately when requested.",
+      "Heavy internet egress is outside the baseline. Provide a monthly estimate to price it explicitly."
+    ]
+  },
+  "warnings": [
+    {
+      "code": "GDPR_CONTROLS",
+      "severity": "warning",
+      "message": "Document data flows, a DPA, erasure/export and retention. If any processor or support plane transfers data, verify the applicable transfer mechanism.",
+      "fields": [
+        "compliance",
+        "infrastructure.data_residency"
+      ]
+    },
+    {
+      "code": "BUDGET_HEADROOM",
+      "severity": "warning",
+      "message": "The upper monthly estimate exceeds the budget. Meter workloads, enforce usage alerts and verify the region-specific bill.",
+      "fields": [
+        "budget.monthly_infra_usd",
+        "scale.traffic_pattern"
+      ]
+    },
+    {
+      "code": "PAYMENT_PROCESSOR_REVIEW",
+      "severity": "warning",
+      "message": "Before going live, verify processor coverage for the requested country and rails and confirm any data residency or compliance obligations in the processor agreement.",
+      "fields": [
+        "requirements.payments",
+        "infrastructure.data_residency",
+        "compliance"
+      ]
+    }
+  ]
+}
