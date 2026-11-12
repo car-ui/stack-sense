@@ -1,2 +1,2 @@
-*.pdf -text
+*.pdf binary
 outputs/*.json text eol=lf

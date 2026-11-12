@@ -5,7 +5,7 @@ import { assuranceSources } from './catalog.mjs';
 import { recoveryPlan } from './recovery.mjs';
 import { chooseArchitecture } from './architecture.mjs';
 
-const VERSION = '1.4.0';
+const VERSION = '1.4.1';
 const warning = (code, severity, message, ...fields) => ({ code, severity, message, fields });
 const emptyCost = () => ({ min: null, max: null, assumptions: ['No estimate was made without a viable input and deployment.'] });
 const retired = [

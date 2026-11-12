@@ -337,6 +337,65 @@ test('hard cap checks other compatible databases before eliminating a host', () 
   assert.ok(capped.estimated_monthly_cost_usd.max <= 155);
 });
 
+test('RAG never promises pgvector while selecting SQLite or existing SQL Server', () => {
+  const input = mandatory();
+  input.scale = { users_at_launch: 30, users_12_months: 40, peak_concurrent_users: 10,
+    data_volume_gb_12_months: 2 };
+  input.infrastructure = { deployment_model: 'self_hosted_cloud_vm', cloud_preference: 'aws',
+    data_residency: 'india', existing_systems: [] };
+  input.requirements = { ml_features: 'llm_rag' };
+  input.context = { budget_policy: 'hard_cap' };
+  input.budget.monthly_infra_usd = 500;
+  const tooSmall = recommend(input);
+  assert.equal(tooSmall.status, 'infeasible');
+  assert.ok(tooSmall.warnings.some(({ code }) => code === 'BUDGET_HARD_CAP'));
+  input.budget.monthly_infra_usd = 600;
+  const rag = recommend(input);
+  assert.match(rag.stack.database.choice, /PostgreSQL/);
+  assert.match(rag.stack.supporting.find(({ layer }) => layer === 'ml').choice, /pgvector/);
+  input.infrastructure = { deployment_model: 'managed_cloud', cloud_preference: 'azure',
+    data_residency: 'india', existing_systems: ['On-prem SQL Server 2019'] };
+  input.context = {};
+  const legacy = recommend(input);
+  assert.match(legacy.stack.database.choice, /PostgreSQL/);
+  assert.doesNotMatch(legacy.stack.database.choice, /Existing Microsoft SQL Server/);
+});
+
+test('capability variations keep selected services compatible with their data store', async () => {
+  let viable = 0;
+  for (let i = 1; i <= 6; i++) {
+    const base = await load('P' + i);
+    for (const model of ['managed_cloud', 'self_hosted_cloud_vm', 'on_premise', 'air_gapped']) {
+      for (const ml of ['none', 'inference_api', 'llm_rag']) {
+        for (const search of [false, true]) {
+          const input = structuredClone(base);
+          input.infrastructure = { ...input.infrastructure, deployment_model: model,
+            cloud_preference: ['on_premise', 'air_gapped'].includes(model) ? 'none' : 'any' };
+          input.requirements = { ...input.requirements, ml_features: ml, full_text_search: search };
+          const result = recommend(input);
+          if (!result.stack) continue;
+          viable++;
+          const { database, supporting } = result.stack;
+          if (ml === 'llm_rag') {
+            assert.match(database.choice, /PostgreSQL/);
+            assert.ok(supporting.some(({ layer, choice }) => layer === 'ml' && /pgvector/.test(choice)));
+          }
+          const nativeSearch = supporting.find(({ layer, choice }) => layer === 'search' &&
+            /PostgreSQL full-text search|SQLite FTS5/.test(choice));
+          if (nativeSearch) {
+            assert.match(database.choice, nativeSearch.choice.startsWith('SQLite') ? /SQLite/ : /PostgreSQL/);
+          }
+          if (['on_premise', 'air_gapped'].includes(model)) {
+            assert.equal(result.deployment.provider, 'local');
+            assert.ok(supporting.every(({ choice }) => !/Cloudflare|Stripe|Razorpay|Microsoft Entra|Amazon S3|Azure Blob/.test(choice)));
+          }
+        }
+      }
+    }
+  }
+  assert.ok(viable >= 40);
+});
+
 test('uptime does not imply recovery targets and slower objectives use PITR', () => {
   const input = mandatory();
   const baseline = recommend(input);

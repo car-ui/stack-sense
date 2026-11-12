@@ -1,6 +1,6 @@
 # StackSense Workbench
 
-A deterministic tech-stack recommendation engine built for the IIIT Bangalore StackSense Challenge. This repository contains the v1.4.0 submission.
+A deterministic tech-stack recommendation engine built for the IIIT Bangalore StackSense Challenge. This repository contains the v1.4.1 submission.
 
 ## Run locally
 

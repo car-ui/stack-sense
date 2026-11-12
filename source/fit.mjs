@@ -207,10 +207,10 @@ function dbRows(h, c) {
     aws: ['rds', 'dynamo'], gcp: ['cloudsql'], azure: ['azurepg', 'azuredb'],
   };
   const options = database.filter((db) => {
-    if (db.id === 'legacySql') return c.systems.sql && !c.systems.retiredSql && !c.ha &&
+    if (db.id === 'legacySql') return c.r.ml_features !== 'llm_rag' && c.systems.sql && !c.systems.retiredSql && !c.ha &&
       !c.regulated && !c.r.full_text_search && (h.provider === 'azure' || h.provider === 'local') &&
       (h.model === 'on_premise' || h.model === 'managed_cloud' || (c.air && !c.systems.sqlOnPrem));
-    if (db.id === 'sqlite') return !managed && compact;
+    if (db.id === 'sqlite') return c.r.ml_features !== 'llm_rag' && !managed && compact;
     if (db.id === 'mongo' || db.id === 'dynamo') return !transactional && !c.r.full_text_search &&
       c.r.ml_features !== 'llm_rag' && c.d.context.data_profile === 'document' &&
       (db.id === 'mongo' ? !managed : h.provider === 'aws' && managed);

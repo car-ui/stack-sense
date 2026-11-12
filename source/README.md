@@ -36,6 +36,8 @@ No LLM or remote service is part of the engine. The optional `--no-llm` flag is 
 
 The benchmark varies provider, deployment model, residency, budget and budget policy across all six public workloads. It verifies the hard constraints and reruns every variant to check determinism. Timings measure the recommendation function after module load.
 
+The regression suite also checks cross-layer consistency across capability variations. In particular, RAG plans use a PostgreSQL profile that can support pgvector; a hard budget cap returns infeasible if no compatible profile fits instead of substituting an incompatible database.
+
 ## Architecture
 
 ```text
