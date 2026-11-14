@@ -260,6 +260,25 @@ function render(output, data) {
       out.append(node('h3', 'Supporting services', 'subhead'), support);
     }
   }
+  if (output.budget_alternative) {
+    const alternative = output.budget_alternative;
+    const lines = alternative.status === 'available' ? [
+      'The same requirements and policies with a hard cap of $' + money.format(alternative.budget_usd) + ' per month.',
+      'Alternative · ' + alternative.stack.frontend + ' / ' + alternative.stack.backend + ' / ' +
+        alternative.stack.database + ' / ' + alternative.stack.hosting + ' in ' + alternative.region + '.',
+      'Modeled cost · $' + money.format(alternative.estimated_monthly_cost_usd.min) + '–$' +
+        money.format(alternative.estimated_monthly_cost_usd.max) + ' per month.',
+      ...alternative.new_tradeoffs.map(({ message }) => 'Additional tradeoff · ' + message),
+    ] : [
+      'No compatible profile fits a hard cap of $' + money.format(alternative.budget_usd) + ' per month.',
+      alternative.reason,
+    ];
+    const comparison = disclosure('Budget-constrained comparison · ' +
+      (alternative.status === 'available' ? 'feasible alternative' : 'no feasible alternative'), lines);
+    comparison.classList.add('budget-alternative');
+    comparison.open = true;
+    out.append(comparison);
+  }
   const alerts = [...output.validation_errors.map(({field, message}) => ({code: field, message, severity: 'critical'})), ...output.warnings];
   if (alerts.length) {
     const list = node('ul', '', 'alerts');

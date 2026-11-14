@@ -5,7 +5,7 @@ import { assuranceSources } from './catalog.mjs';
 import { recoveryPlan } from './recovery.mjs';
 import { chooseArchitecture } from './architecture.mjs';
 
-const VERSION = '1.4.1';
+const VERSION = '1.5.0';
 const warning = (code, severity, message, ...fields) => ({ code, severity, message, fields });
 const emptyCost = () => ({ min: null, max: null, assumptions: ['No estimate was made without a viable input and deployment.'] });
 const retired = [
@@ -334,7 +334,7 @@ export function recommend(input) {
         c.r.realtime ? 'Separate durable records from ephemeral socket traffic.' :
         c.regulated ? 'Keep restricted workflows, audit records and backups inside the approved data boundary.' :
           'Keep the data and application layers close and add supporting services only for requested capabilities.');
-  return resultFor(d, assumptions, {
+  const result = resultFor(d, assumptions, {
     status: warnings.some((w) => w.severity !== 'info') ? 'ok_with_warnings' : 'ok',
     summary, architecture_style: style,
     architecture_decision: architecture,
@@ -344,4 +344,30 @@ export function recommend(input) {
     ...(recovery ? { recovery_plan: recovery } : {}),
     estimated_monthly_cost_usd: band, warnings,
   });
+  if (d.context.budget_policy === 'soft' && band.max > budget) {
+    const capped = recommend({ ...input, context: { ...input.context, budget_policy: 'hard_cap' } });
+    if (capped.stack) {
+      result.budget_alternative = {
+        status: 'available', budget_usd: budget,
+        method: 'Rerun the same inputs with a hard cap on the modeled upper monthly cost.',
+        stack: Object.fromEntries(['frontend', 'backend', 'database', 'hosting']
+          .map((layer) => [layer, capped.stack[layer].choice])),
+        region: capped.deployment.region,
+        estimated_monthly_cost_usd: {
+          min: capped.estimated_monthly_cost_usd.min,
+          max: capped.estimated_monthly_cost_usd.max,
+        },
+        new_tradeoffs: capped.warnings
+          .filter(({ code }) => !warnings.some((item) => item.code === code))
+          .map(({ code, message }) => ({ code, message })),
+      };
+    } else {
+      result.budget_alternative = {
+        status: 'unavailable', budget_usd: budget,
+        method: 'Rerun the same inputs with a hard cap on the modeled upper monthly cost.',
+        reason: capped.warnings.find(({ code }) => code === 'BUDGET_HARD_CAP')?.message ?? capped.summary,
+      };
+    }
+  }
+  return result;
 }

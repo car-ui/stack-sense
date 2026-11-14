@@ -306,6 +306,21 @@ test('hard cap changes the realtime plan without changing EU placement', async (
     choice.includes('Fargate') && /hard cap/.test(reason)));
   assert.match(capped.stack.hosting.alternatives[0].why_not, /hard cap/);
   assert.ok(capped.warnings.some(({ code }) => code === 'CLOUD_RUN_SOCKET_LIMITS'));
+  assert.equal(soft.budget_alternative.status, 'available');
+  assert.equal(soft.budget_alternative.stack.hosting, capped.stack.hosting.choice);
+  assert.equal(soft.budget_alternative.estimated_monthly_cost_usd.max, capped.estimated_monthly_cost_usd.max);
+  assert.ok(soft.budget_alternative.new_tradeoffs.some(({ code }) => code === 'CLOUD_RUN_SOCKET_LIMITS'));
+  assert.equal(capped.budget_alternative, undefined);
+});
+
+test('budget comparison explains when a strict cap has no compatible stack', async () => {
+  for (const id of ['P2', 'P6']) {
+    const input = await load(id);
+    const soft = recommend(input);
+    assert.equal(soft.budget_alternative.status, 'unavailable');
+    assert.match(soft.budget_alternative.reason, /lowest modeled ceiling/);
+    assert.equal(soft.budget_alternative.budget_usd, input.budget.monthly_infra_usd);
+  }
 });
 
 test('hard cap never substitutes an unapproved provider for a regulated workload', async () => {

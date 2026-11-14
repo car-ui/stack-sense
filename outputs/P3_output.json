@@ -1,6 +1,6 @@
 {
   "scenario_id": "P3",
-  "engine_version": "1.4.1",
+  "engine_version": "1.5.0",
   "assumptions": [
     "context.data_classification defaulted to \"unspecified\".",
     "context.recovery_point_minutes defaulted to null.",
@@ -521,5 +521,27 @@
         "compliance"
       ]
     }
-  ]
+  ],
+  "budget_alternative": {
+    "status": "available",
+    "budget_usd": 1500,
+    "method": "Rerun the same inputs with a hard cap on the modeled upper monthly cost.",
+    "stack": {
+      "frontend": "React + Vite",
+      "backend": "NestJS",
+      "database": "Cloud SQL for PostgreSQL",
+      "hosting": "Google Cloud Run"
+    },
+    "region": "europe-west1 (Belgium)",
+    "estimated_monthly_cost_usd": {
+      "min": 433,
+      "max": 1460
+    },
+    "new_tradeoffs": [
+      {
+        "code": "CLOUD_RUN_SOCKET_LIMITS",
+        "message": "Plan for WebSocket reconnects before the Cloud Run request timeout. Share room state between instances, test reconnect storms and verify billing while sockets are open."
+      }
+    ]
+  }
 }

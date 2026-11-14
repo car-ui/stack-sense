@@ -21,3 +21,15 @@
 .estimate .budget-state.above_budget {
   color: var(--amber);
 }
+.budget-alternative {
+  border: 1px solid #806749;
+  border-left: 3px solid var(--amber);
+  border-radius: 9px;
+  background: #302a2b;
+  padding: 9px 12px;
+  color: #e7d6b7;
+}
+.budget-alternative summary {
+  color: var(--amber);
+  font-weight: 720;
+}

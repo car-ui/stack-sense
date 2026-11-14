@@ -1,6 +1,6 @@
 {
   "scenario_id": "P2",
-  "engine_version": "1.4.1",
+  "engine_version": "1.5.0",
   "assumptions": [
     "context.data_classification defaulted to \"unspecified\".",
     "context.recovery_point_minutes defaulted to null.",
@@ -563,5 +563,11 @@
         "compliance"
       ]
     }
-  ]
+  ],
+  "budget_alternative": {
+    "status": "unavailable",
+    "budget_usd": 150,
+    "method": "Rerun the same inputs with a hard cap on the modeled upper monthly cost.",
+    "reason": "The lowest modeled ceiling among policy-compatible options is USD 175 for Google Cloud Run. It exceeds the hard cap of USD 150."
+  }
 }

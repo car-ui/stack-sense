@@ -95,6 +95,8 @@ Twelve optional fields refine a scenario.
 
 The cost range is illustrative. It excludes labor, taxes, hardware purchase, transaction fees and unmodeled traffic. Each eligible profile uses the cost of its selected supporting services. The decision report and JSON trace show competing hosting profiles, rejected options and the scoring differences behind ranked alternatives.
 
+When a soft-budget recommendation's upper estimate exceeds the monthly target, the engine reruns the identical scenario with `context.budget_policy=hard_cap`. The result includes `budget_alternative`: a feasible full-stack comparison with its new delivery trade-offs, or the reason no policy-compatible profile fits. This comparison does not silently replace the selected recommendation or relax residency, provider, feature or recovery constraints. The browser displays it beside the selected plan.
+
 **Why this architecture** explains the deployment style, names its input drivers, traces requests and durable state, and compares an alternative. The collaboration profile identifies the API and socket paths separately and uses compatible components for fanout and binary document persistence.
 
 A small public read-heavy API can qualify for Cloudflare Workers Free and D1 Free when its data, traffic, features, skills and policy fit the documented profile. The planner reserves headroom below published account quotas. Confirm public-data scope, CPU time and query scans before launch.
@@ -108,4 +110,5 @@ A small public read-heavy API can qualify for Cloudflare Workers Free and D1 Fre
 - Node.js 22+ standard library, ECMAScript modules, HTML, CSS and DOM APIs. No external dependencies or runtime APIs.
 - The six public input fixtures come from Appendix A of the StackSense Challenge problem statement v1.0, IIIT Bangalore. [Official competition listing](https://unstop.com/hackathons/stacksense-challenge-synergy-26-international-institute-of-information-technology-iiit-bangalore-1762891/amp)
 - Catalog product references are attached to entries in `catalog.mjs`. The report lists provider prices, capability docs and policy references.
+- Public [StackSense Challenge](https://github.com/shinjan-2006/StackSense) and [stacksense](https://github.com/amantebriwal4321/stacksense) repositories were reviewed for feature comparison. Their general presentation of budget alternatives and cross-layer trade-offs informed this review; no code or assets were reused.
 - OpenAI Codex assisted with implementation, research collection, tests and report preparation. The report and decision policy are a working draft for participant review and ownership before submission.
