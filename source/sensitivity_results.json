@@ -165,7 +165,7 @@
     },
     "requirements.ml_features": {
       "variants": 7,
-      "core_changed": 4,
+      "core_changed": 3,
       "material_changed": 7,
       "score_changed": 7
     },
@@ -215,7 +215,7 @@
       "variants": 11,
       "core_changed": 0,
       "material_changed": 0,
-      "score_changed": 0
+      "score_changed": 3
     },
     "priorities.maintainability": {
       "variants": 11,
@@ -227,7 +227,7 @@
       "variants": 11,
       "core_changed": 0,
       "material_changed": 0,
-      "score_changed": 5
+      "score_changed": 1
     },
     "context.data_classification": {
       "variants": 12,
@@ -237,7 +237,7 @@
     },
     "context.peak_requests_per_second": {
       "variants": 12,
-      "core_changed": 2,
+      "core_changed": 1,
       "material_changed": 8,
       "score_changed": 8
     },
@@ -292,9 +292,9 @@
   },
   "total_variants": 457,
   "invalid_variants": 0,
-  "core_changed": 105,
+  "core_changed": 103,
   "material_changed": 237,
-  "score_changed": 235,
+  "score_changed": 234,
   "fields_with_material_change": 38,
-  "fields_with_score_change": 42
+  "fields_with_score_change": 43
 }

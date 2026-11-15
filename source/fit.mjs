@@ -322,7 +322,10 @@ export function chooseDeployment(c, costOf) {
     }
     if (h.id === 'run' && c.d.scale.traffic_pattern !== 'steady' && !c.r.realtime) add(5 + c.p.scalability, 'scale.traffic_pattern', 'Request-based autoscaling matches bursts without keeping full peak capacity idle.');
     if (h.id === 'run' && c.r.realtime) add(-6, 'requirements.realtime', 'Connection timeouts, active billing and cross-instance fanout add friction for persistent realtime.');
-    if (h.id === 'fargate' && c.r.realtime) add(7 + c.p.security, 'requirements.realtime', 'Always-on container tasks avoid scale-to-zero and request time limits on persistent connections.');
+    if (h.id === 'fargate' && c.r.realtime) {
+      add(7, 'requirements.realtime', 'Always-on container tasks avoid scale-to-zero and request time limits on persistent connections.');
+      add(c.p.performance, 'priorities.performance', 'The performance priority favors long-lived tasks for realtime connections.');
+    }
     else if (h.id === 'fargate' && c.regulated) add(7 + c.p.security, 'compliance', 'Private tasks and a regional load balancer provide a configurable regulated data plane.');
     if (h.id === 'appservice' && c.systems.sql) add(12, 'infrastructure.existing_systems', 'Hybrid Connections or private networking can reach the existing SQL endpoint.');
     if (h.id === 'appservice' && c.d.team.languages.includes('csharp')) add(4, 'team.languages', 'Managed .NET hosting reduces delivery setup.');

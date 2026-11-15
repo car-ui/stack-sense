@@ -41,6 +41,8 @@ The independent sensitivity audit changes one field at a time across all six pub
 
 The regression suite also checks cross-layer consistency across capability variations. In particular, RAG plans use a PostgreSQL profile that can support pgvector; a hard budget cap returns infeasible if no compatible profile fits instead of substituting an incompatible database.
 
+Realtime hosting uses `priorities.performance` when ranking persistent container tasks. A soft budget may still favor that topology when performance is weighted highly; the budget warning and strict-cap comparison make the cost trade-off explicit. The security priority is reserved for security and regulated-workload rules.
+
 ## Architecture
 
 ```text

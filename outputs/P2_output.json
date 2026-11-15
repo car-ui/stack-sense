@@ -1,6 +1,6 @@
 {
   "scenario_id": "P2",
-  "engine_version": "1.5.1",
+  "engine_version": "1.5.2",
   "assumptions": [
     "context.data_classification defaulted to \"unspecified\".",
     "context.recovery_point_minutes defaulted to null.",
@@ -271,14 +271,22 @@
       "alternatives": [
         {
           "choice": "Azure App Service",
-          "why_not": "It scored 9.78 points lower on combined fit. Always-on container tasks avoid scale-to-zero and request time limits on persistent connections. The alternative gained points on budget.monthly_infra_usd.",
+          "why_not": "It scored 9.78 points lower on combined fit. Always-on container tasks avoid scale-to-zero and request time limits on persistent connections. The performance priority favors long-lived tasks for realtime connections. The alternative gained points on budget.monthly_infra_usd.",
           "score_gap": 9.78,
           "factors": [
             {
               "field": "requirements.realtime",
-              "points": 10,
+              "points": 7,
               "selected": [
                 "Always-on container tasks avoid scale-to-zero and request time limits on persistent connections."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "priorities.performance",
+              "points": 3,
+              "selected": [
+                "The performance priority favors long-lived tasks for realtime connections."
               ],
               "alternative": []
             },
@@ -315,8 +323,13 @@
         },
         {
           "field": "requirements.realtime",
-          "points": 10,
+          "points": 7,
           "reason": "Always-on container tasks avoid scale-to-zero and request time limits on persistent connections."
+        },
+        {
+          "field": "priorities.performance",
+          "points": 3,
+          "reason": "The performance priority favors long-lived tasks for realtime connections."
         },
         {
           "field": "team.has_devops",

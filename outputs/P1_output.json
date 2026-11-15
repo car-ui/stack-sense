@@ -1,6 +1,6 @@
 {
   "scenario_id": "P1",
-  "engine_version": "1.5.1",
+  "engine_version": "1.5.2",
   "assumptions": [
     "context.data_classification defaulted to \"unspecified\".",
     "context.recovery_point_minutes defaulted to null.",

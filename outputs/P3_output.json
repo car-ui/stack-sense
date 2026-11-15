@@ -1,6 +1,6 @@
 {
   "scenario_id": "P3",
-  "engine_version": "1.5.1",
+  "engine_version": "1.5.2",
   "assumptions": [
     "context.data_classification defaulted to \"unspecified\".",
     "context.recovery_point_minutes defaulted to null.",
@@ -201,24 +201,33 @@
     },
     "hosting": {
       "choice": "Amazon ECS on AWS Fargate",
-      "justification": "Runs portable containers behind an Application Load Balancer with no node fleet. Always-on container tasks avoid scale-to-zero and request time limits on persistent connections. Fits the requested managed cloud model. Place the data plane and backups in the selected geography. The high end could exceed the budget. The modeled USD 722–1980 per month affects ranking. Placement: eu-central-1 (Frankfurt).",
+      "justification": "Runs portable containers behind an Application Load Balancer with no node fleet. Always-on container tasks avoid scale-to-zero and request time limits on persistent connections. Fits the requested managed cloud model. The performance priority favors long-lived tasks for realtime connections. Place the data plane and backups in the selected geography. The high end could exceed the budget. The modeled USD 722–1980 per month affects ranking. Placement: eu-central-1 (Frankfurt).",
       "driven_by": [
         "requirements.realtime",
         "infrastructure.deployment_model",
+        "priorities.performance",
         "infrastructure.data_residency",
         "budget.monthly_infra_usd"
       ],
       "alternatives": [
         {
           "choice": "Azure App Service",
-          "why_not": "It scored 9.76 points lower on combined fit. Always-on container tasks avoid scale-to-zero and request time limits on persistent connections. The alternative gained points on budget.monthly_infra_usd.",
-          "score_gap": 9.76,
+          "why_not": "It scored 11.76 points lower on combined fit. Always-on container tasks avoid scale-to-zero and request time limits on persistent connections. The performance priority favors long-lived tasks for realtime connections. The alternative gained points on budget.monthly_infra_usd.",
+          "score_gap": 11.76,
           "factors": [
             {
               "field": "requirements.realtime",
-              "points": 10,
+              "points": 7,
               "selected": [
                 "Always-on container tasks avoid scale-to-zero and request time limits on persistent connections."
+              ],
+              "alternative": []
+            },
+            {
+              "field": "priorities.performance",
+              "points": 5,
+              "selected": [
+                "The performance priority favors long-lived tasks for realtime connections."
               ],
               "alternative": []
             },
@@ -241,7 +250,7 @@
         "The load balancer and always-running task impose a monthly baseline."
       ],
       "source": "https://aws.amazon.com/fargate/pricing/",
-      "fit_score": 10.74,
+      "fit_score": 12.74,
       "score_breakdown": [
         {
           "field": "infrastructure.deployment_model",
@@ -255,8 +264,13 @@
         },
         {
           "field": "requirements.realtime",
-          "points": 10,
+          "points": 7,
           "reason": "Always-on container tasks avoid scale-to-zero and request time limits on persistent connections."
+        },
+        {
+          "field": "priorities.performance",
+          "points": 5,
+          "reason": "The performance priority favors long-lived tasks for realtime connections."
         },
         {
           "field": "budget.monthly_infra_usd",
@@ -459,7 +473,7 @@
         "database": "Amazon RDS for PostgreSQL",
         "min_usd": 722,
         "max_usd": 1980,
-        "fit_score": 10.74,
+        "fit_score": 12.74,
         "selected": true
       },
       {

@@ -264,6 +264,27 @@ test('scored runner-up explains the margin with scenario-specific factors', asyn
   }
 });
 
+test('realtime hosting responds to performance priority independently of security priority', async () => {
+  const input = await load('P3');
+  input.priorities.performance = 1;
+  const low = recommend(input);
+  input.priorities.performance = 5;
+  const high = recommend(input);
+  assert.equal(low.stack.hosting.choice, high.stack.hosting.choice);
+  assert.equal(high.stack.hosting.fit_score - low.stack.hosting.fit_score, 4);
+  assert.equal(high.stack.hosting.score_breakdown.find(({ field }) => field === 'priorities.performance').points, 5);
+  assert.equal(high.stack.hosting.score_breakdown.find(({ field }) => field === 'requirements.realtime').points, 7);
+  input.budget.monthly_infra_usd = 700;
+  input.priorities.cost = 1;
+  input.priorities.performance = 1;
+  const costLed = recommend(input);
+  input.priorities.performance = 5;
+  const performanceLed = recommend(input);
+  assert.notEqual(costLed.stack.hosting.choice, performanceLed.stack.hosting.choice);
+  assert.equal(performanceLed.stack.hosting.choice, 'Amazon ECS on AWS Fargate');
+  assert.ok(performanceLed.warnings.some(({ code }) => code === 'BUDGET_BELOW_FLOOR'));
+});
+
 const publicDirectory = () => ({
   ...mandatory(),
   project: { name: 'Community directory', type: 'api_platform', platforms: ['api_only'] },
