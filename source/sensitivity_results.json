@@ -1,0 +1,300 @@
+{
+  "scenario_count": 6,
+  "fields": {
+    "project.name": {
+      "variants": 6,
+      "core_changed": 0,
+      "material_changed": 0,
+      "score_changed": 0
+    },
+    "project.description": {
+      "variants": 6,
+      "core_changed": 0,
+      "material_changed": 0,
+      "score_changed": 0
+    },
+    "project.type": {
+      "variants": 10,
+      "core_changed": 4,
+      "material_changed": 5,
+      "score_changed": 5
+    },
+    "project.platforms": {
+      "variants": 8,
+      "core_changed": 8,
+      "material_changed": 8,
+      "score_changed": 8
+    },
+    "scale.users_at_launch": {
+      "variants": 12,
+      "core_changed": 1,
+      "material_changed": 6,
+      "score_changed": 3
+    },
+    "scale.users_12_months": {
+      "variants": 12,
+      "core_changed": 1,
+      "material_changed": 10,
+      "score_changed": 5
+    },
+    "scale.peak_concurrent_users": {
+      "variants": 12,
+      "core_changed": 2,
+      "material_changed": 8,
+      "score_changed": 8
+    },
+    "scale.traffic_pattern": {
+      "variants": 6,
+      "core_changed": 1,
+      "material_changed": 1,
+      "score_changed": 1
+    },
+    "scale.workload": {
+      "variants": 8,
+      "core_changed": 1,
+      "material_changed": 7,
+      "score_changed": 7
+    },
+    "scale.data_volume_gb_12_months": {
+      "variants": 12,
+      "core_changed": 0,
+      "material_changed": 9,
+      "score_changed": 9
+    },
+    "team.size": {
+      "variants": 11,
+      "core_changed": 0,
+      "material_changed": 7,
+      "score_changed": 5
+    },
+    "team.experience": {
+      "variants": 9,
+      "core_changed": 0,
+      "material_changed": 1,
+      "score_changed": 2
+    },
+    "team.languages": {
+      "variants": 12,
+      "core_changed": 7,
+      "material_changed": 7,
+      "score_changed": 9
+    },
+    "team.has_devops": {
+      "variants": 6,
+      "core_changed": 0,
+      "material_changed": 1,
+      "score_changed": 6
+    },
+    "budget.monthly_infra_usd": {
+      "variants": 11,
+      "core_changed": 5,
+      "material_changed": 8,
+      "score_changed": 10
+    },
+    "timeline.mvp_weeks": {
+      "variants": 11,
+      "core_changed": 1,
+      "material_changed": 1,
+      "score_changed": 1
+    },
+    "infrastructure.cloud_preference": {
+      "variants": 11,
+      "core_changed": 8,
+      "material_changed": 9,
+      "score_changed": 11
+    },
+    "infrastructure.deployment_model": {
+      "variants": 6,
+      "core_changed": 6,
+      "material_changed": 6,
+      "score_changed": 6
+    },
+    "infrastructure.data_residency": {
+      "variants": 8,
+      "core_changed": 3,
+      "material_changed": 7,
+      "score_changed": 3
+    },
+    "infrastructure.existing_systems": {
+      "variants": 7,
+      "core_changed": 6,
+      "material_changed": 7,
+      "score_changed": 5
+    },
+    "requirements.realtime": {
+      "variants": 6,
+      "core_changed": 4,
+      "material_changed": 6,
+      "score_changed": 6
+    },
+    "requirements.offline_support": {
+      "variants": 6,
+      "core_changed": 2,
+      "material_changed": 6,
+      "score_changed": 2
+    },
+    "requirements.full_text_search": {
+      "variants": 6,
+      "core_changed": 1,
+      "material_changed": 6,
+      "score_changed": 5
+    },
+    "requirements.file_media_storage": {
+      "variants": 6,
+      "core_changed": 1,
+      "material_changed": 6,
+      "score_changed": 5
+    },
+    "requirements.payments": {
+      "variants": 6,
+      "core_changed": 1,
+      "material_changed": 6,
+      "score_changed": 5
+    },
+    "requirements.auth": {
+      "variants": 10,
+      "core_changed": 4,
+      "material_changed": 10,
+      "score_changed": 10
+    },
+    "requirements.multi_tenant": {
+      "variants": 6,
+      "core_changed": 4,
+      "material_changed": 4,
+      "score_changed": 5
+    },
+    "requirements.ml_features": {
+      "variants": 7,
+      "core_changed": 4,
+      "material_changed": 7,
+      "score_changed": 7
+    },
+    "requirements.seo_critical": {
+      "variants": 6,
+      "core_changed": 3,
+      "material_changed": 4,
+      "score_changed": 1
+    },
+    "requirements.availability": {
+      "variants": 10,
+      "core_changed": 4,
+      "material_changed": 7,
+      "score_changed": 6
+    },
+    "requirements.p95_latency_ms": {
+      "variants": 12,
+      "core_changed": 1,
+      "material_changed": 6,
+      "score_changed": 0
+    },
+    "compliance": {
+      "variants": 10,
+      "core_changed": 1,
+      "material_changed": 10,
+      "score_changed": 4
+    },
+    "priorities.cost": {
+      "variants": 10,
+      "core_changed": 0,
+      "material_changed": 0,
+      "score_changed": 9
+    },
+    "priorities.time_to_market": {
+      "variants": 10,
+      "core_changed": 1,
+      "material_changed": 1,
+      "score_changed": 10
+    },
+    "priorities.scalability": {
+      "variants": 9,
+      "core_changed": 0,
+      "material_changed": 0,
+      "score_changed": 2
+    },
+    "priorities.performance": {
+      "variants": 11,
+      "core_changed": 0,
+      "material_changed": 0,
+      "score_changed": 0
+    },
+    "priorities.maintainability": {
+      "variants": 11,
+      "core_changed": 0,
+      "material_changed": 0,
+      "score_changed": 7
+    },
+    "priorities.security": {
+      "variants": 11,
+      "core_changed": 0,
+      "material_changed": 0,
+      "score_changed": 5
+    },
+    "context.data_classification": {
+      "variants": 12,
+      "core_changed": 1,
+      "material_changed": 6,
+      "score_changed": 6
+    },
+    "context.peak_requests_per_second": {
+      "variants": 12,
+      "core_changed": 2,
+      "material_changed": 8,
+      "score_changed": 8
+    },
+    "context.peak_day_requests": {
+      "variants": 12,
+      "core_changed": 0,
+      "material_changed": 0,
+      "score_changed": 0
+    },
+    "context.budget_policy": {
+      "variants": 12,
+      "core_changed": 3,
+      "material_changed": 3,
+      "score_changed": 3
+    },
+    "context.monthly_egress_gb": {
+      "variants": 12,
+      "core_changed": 0,
+      "material_changed": 8,
+      "score_changed": 8
+    },
+    "context.search_corpus_gb": {
+      "variants": 12,
+      "core_changed": 0,
+      "material_changed": 1,
+      "score_changed": 1
+    },
+    "context.vendor_lock_in": {
+      "variants": 12,
+      "core_changed": 0,
+      "material_changed": 0,
+      "score_changed": 5
+    },
+    "context.data_profile": {
+      "variants": 12,
+      "core_changed": 0,
+      "material_changed": 0,
+      "score_changed": 0
+    },
+    "context.recovery_point_minutes": {
+      "variants": 12,
+      "core_changed": 8,
+      "material_changed": 12,
+      "score_changed": 6
+    },
+    "context.recovery_time_minutes": {
+      "variants": 12,
+      "core_changed": 6,
+      "material_changed": 12,
+      "score_changed": 5
+    }
+  },
+  "total_variants": 457,
+  "invalid_variants": 0,
+  "core_changed": 105,
+  "material_changed": 237,
+  "score_changed": 235,
+  "fields_with_material_change": 38,
+  "fields_with_score_change": 42
+}

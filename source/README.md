@@ -28,6 +28,7 @@ node cli.mjs scenarios/P2.json --out P2_output.json --no-llm
 node cli.mjs scenarios/P6.json
 node --test
 node benchmark.mjs
+node sensitivity.mjs
 ```
 
 The first command writes to the chosen path relative to the current directory. The second prints JSON to standard output. Input errors and infeasibility still produce JSON. Exit codes are 0 for a recommendation (including warnings), 1 for invalid CLI syntax, 2 for invalid input, and 3 for infeasibility. A path outside the current directory can be passed as a quoted argument.
@@ -35,6 +36,8 @@ The first command writes to the chosen path relative to the current directory. T
 No LLM or remote service is part of the engine. The optional `--no-llm` flag is accepted for judge scripts, and its presence leaves the entire output identical. The choices do not use scenario IDs. No environment variables are required.
 
 The benchmark varies provider, deployment model, residency, budget and budget policy across all six public workloads. It verifies the hard constraints and reruns every variant to check determinism. Timings measure the recommendation function after module load.
+
+The independent sensitivity audit changes one field at a time across all six public inputs and compares selected layers, support services, placement, cost, warnings and relative scores. The 457-probe, 48-field result is saved in `sensitivity_results.json`; the command above prints a fresh result for comparison. A change to a field need not change the selected stack when the field is irrelevant to that workload or the new score does not overtake the winner. The probe values are stress tests, not representative demand forecasts.
 
 The regression suite also checks cross-layer consistency across capability variations. In particular, RAG plans use a PostgreSQL profile that can support pgvector; a hard budget cap returns infeasible if no compatible profile fits instead of substituting an incompatible database.
 
@@ -114,4 +117,5 @@ A small public read-heavy API can qualify for Cloudflare Workers Free and D1 Fre
 - Catalog product references are attached to entries in `catalog.mjs`. The report lists provider prices, capability docs and policy references.
 - Public [StackSense Challenge](https://github.com/shinjan-2006/StackSense) and [stacksense](https://github.com/amantebriwal4321/stacksense) repositories were reviewed for feature comparison. Their general presentation of budget alternatives and cross-layer trade-offs informed this review; no code or assets were reused.
 - A peer submission's calculation-audit presentation informed the score-breakdown addition. The rules, output contract and interface here were implemented independently; no peer code or assets were reused.
+- A separate peer submission suggested validating one-field input sensitivity. This repository's sensitivity script and results were created independently; no peer code or measurements were reused.
 - OpenAI Codex assisted with implementation, research collection, tests and report preparation. The report and decision policy are a working draft for participant review and ownership before submission.

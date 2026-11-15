@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node server.mjs",
     "recommend": "node cli.mjs",
-    "test": "node --test"
+    "test": "node --test",
+    "sensitivity": "node sensitivity.mjs"
   }
 }
