@@ -1,6 +1,6 @@
 {
   "scenario_id": "P1",
-  "engine_version": "1.5.0",
+  "engine_version": "1.5.1",
   "assumptions": [
     "context.data_classification defaulted to \"unspecified\".",
     "context.recovery_point_minutes defaulted to null.",
@@ -81,7 +81,19 @@
         "Interactive pages still need deliberate hydration boundaries."
       ],
       "source": "https://docs.astro.build/en/concepts/why-astro/",
-      "fit_score": 26
+      "fit_score": 26,
+      "score_breakdown": [
+        {
+          "field": "team.languages",
+          "points": 8,
+          "reason": "The team already lists javascript."
+        },
+        {
+          "field": "project.type",
+          "points": 18,
+          "reason": "Content pages can be built before traffic arrives."
+        }
+      ]
     },
     "backend": {
       "choice": "None",
@@ -148,7 +160,34 @@
         "Free-plan limits apply. This profile has no private data plane."
       ],
       "source": "https://developers.cloudflare.com/pages/platform/limits/",
-      "fit_score": 45
+      "fit_score": 45,
+      "score_breakdown": [
+        {
+          "field": "infrastructure.deployment_model",
+          "points": 5,
+          "reason": "Fits the requested managed cloud model."
+        },
+        {
+          "field": "project.type",
+          "points": 32,
+          "reason": "Public files do not need an always-on server."
+        },
+        {
+          "field": "scale.traffic_pattern",
+          "points": 2,
+          "reason": "Cloudflare Pages serves static requests without metering them against Functions quotas."
+        },
+        {
+          "field": "team.has_devops",
+          "points": 6,
+          "reason": "Managed compute reduces infrastructure maintenance for the team."
+        },
+        {
+          "field": "budget.monthly_infra_usd",
+          "points": 0,
+          "reason": "The modeled USD 0–0 per month affects ranking."
+        }
+      ]
     },
     "supporting": [
       {

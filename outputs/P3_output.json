@@ -1,6 +1,6 @@
 {
   "scenario_id": "P3",
-  "engine_version": "1.5.0",
+  "engine_version": "1.5.1",
   "assumptions": [
     "context.data_classification defaulted to \"unspecified\".",
     "context.recovery_point_minutes defaulted to null.",
@@ -74,7 +74,24 @@
         "Client rendering alone is a poor default for indexable pages."
       ],
       "source": "https://react.dev/learn/start-a-new-react-project",
-      "fit_score": 19
+      "fit_score": 19,
+      "score_breakdown": [
+        {
+          "field": "team.languages",
+          "points": 5,
+          "reason": "The team already lists typescript."
+        },
+        {
+          "field": "project.platforms",
+          "points": 8,
+          "reason": "Interactive web views can ship as immutable assets."
+        },
+        {
+          "field": "requirements.realtime",
+          "points": 6,
+          "reason": "The client can keep frequent updates isolated in interactive views."
+        }
+      ]
     },
     "backend": {
       "choice": "NestJS",
@@ -122,7 +139,29 @@
         "More framework structure and runtime overhead than a small Fastify service."
       ],
       "source": "https://docs.nestjs.com/",
-      "fit_score": 18
+      "fit_score": 18,
+      "score_breakdown": [
+        {
+          "field": "team.languages",
+          "points": 5,
+          "reason": "The team already lists typescript."
+        },
+        {
+          "field": "project.type",
+          "points": 1,
+          "reason": "A single deployable API keeps the initial service boundary explicit."
+        },
+        {
+          "field": "requirements.realtime",
+          "points": 8,
+          "reason": "Explicit modules separate socket events, accounts and business logic."
+        },
+        {
+          "field": "requirements.multi_tenant",
+          "points": 4,
+          "reason": "Request guards can centralize tenant context and authorization."
+        }
+      ]
     },
     "database": {
       "choice": "Amazon RDS for PostgreSQL",
@@ -141,7 +180,24 @@
         "Database sizing and failover behavior need load and restore tests."
       ],
       "source": "https://aws.amazon.com/rds/postgresql/pricing/",
-      "fit_score": 16
+      "fit_score": 16,
+      "score_breakdown": [
+        {
+          "field": "scale.workload",
+          "points": 3,
+          "reason": "The data layer is paired with the selected deployment model."
+        },
+        {
+          "field": "scale.workload",
+          "points": 6,
+          "reason": "SQL transactions fit durable state and indexed access."
+        },
+        {
+          "field": "requirements.multi_tenant",
+          "points": 7,
+          "reason": "Enforce tenant keys and row-level policies alongside application checks."
+        }
+      ]
     },
     "hosting": {
       "choice": "Amazon ECS on AWS Fargate",
@@ -185,7 +241,34 @@
         "The load balancer and always-running task impose a monthly baseline."
       ],
       "source": "https://aws.amazon.com/fargate/pricing/",
-      "fit_score": 10.74
+      "fit_score": 10.74,
+      "score_breakdown": [
+        {
+          "field": "infrastructure.deployment_model",
+          "points": 5,
+          "reason": "Fits the requested managed cloud model."
+        },
+        {
+          "field": "infrastructure.data_residency",
+          "points": 4,
+          "reason": "Place the data plane and backups in the selected geography."
+        },
+        {
+          "field": "requirements.realtime",
+          "points": 10,
+          "reason": "Always-on container tasks avoid scale-to-zero and request time limits on persistent connections."
+        },
+        {
+          "field": "budget.monthly_infra_usd",
+          "points": -5,
+          "reason": "The high end could exceed the budget."
+        },
+        {
+          "field": "budget.monthly_infra_usd",
+          "points": -3.2554,
+          "reason": "The modeled USD 722–1980 per month affects ranking."
+        }
+      ]
     },
     "supporting": [
       {

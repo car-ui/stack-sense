@@ -178,6 +178,26 @@ function card(layer, part) {
   const more = node('details');
   more.append(node('summary', 'Drivers, alternatives and trade-offs'),
     node('p', 'Drivers: ' + part.driven_by.join(', ')));
+  if (part.score_breakdown?.length) {
+    more.append(node('p', 'Relative fit score · ' + part.fit_score +
+      ' points. The signed rule contributions below sum to this score (subject to display rounding).'));
+    const calculation = node('ul', '', 'fit-factors');
+    for (const { field, points, reason } of part.score_breakdown) {
+      calculation.append(node('li', (points > 0 ? '+' : '') + points + ' · ' + field + ' · ' + reason));
+    }
+    more.append(calculation);
+  }
+  if (part.component_scores?.length) {
+    more.append(node('p', 'Client targets are ranked separately; their relative points are not added into a single score.'));
+    for (const component of part.component_scores) {
+      more.append(node('p', component.choice + ' · ' + component.fit_score + ' relative points'));
+      const calculation = node('ul', '', 'fit-factors');
+      for (const { field, points, reason } of component.score_breakdown) {
+        calculation.append(node('li', (points > 0 ? '+' : '') + points + ' · ' + field + ' · ' + reason));
+      }
+      more.append(calculation);
+    }
+  }
   for (const alt of part.alternatives) {
     more.append(node('p', alt.choice + ' — ' + alt.why_not));
     if (alt.factors?.length) {

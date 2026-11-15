@@ -56,6 +56,9 @@ function describe(rows, fallback, extra = '') {
     tradeoffs: [item.tradeoff],
     source: item.source,
     fit_score: Number(score.toFixed(2)),
+    score_breakdown: signals.map(({ field, points, reason }) => ({
+      field, points: Number(points.toFixed(4)), reason,
+    })),
   };
 }
 
@@ -159,6 +162,7 @@ export function client(c) {
     alternatives: parts.flatMap((part) => part.alternatives),
     tradeoffs: [...new Set(parts.flatMap((part) => part.tradeoffs)), 'Keep identity, schemas and regression checks consistent across client builds.'],
     sources: [...new Set(parts.map((part) => part.source))],
+    component_scores: parts.map(({ choice, fit_score, score_breakdown }) => ({ choice, fit_score, score_breakdown })),
   };
 }
 

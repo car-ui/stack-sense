@@ -1,6 +1,6 @@
 {
   "scenario_id": "P4",
-  "engine_version": "1.5.0",
+  "engine_version": "1.5.1",
   "assumptions": [
     "context.data_classification defaulted to \"unspecified\".",
     "context.recovery_point_minutes defaulted to null.",
@@ -96,6 +96,45 @@
       "sources": [
         "https://react.dev/learn/start-a-new-react-project",
         "https://reactnative.dev/docs/getting-started"
+      ],
+      "component_scores": [
+        {
+          "choice": "React + Vite",
+          "fit_score": 13,
+          "score_breakdown": [
+            {
+              "field": "team.languages",
+              "points": 5,
+              "reason": "The team already lists typescript."
+            },
+            {
+              "field": "project.platforms",
+              "points": 8,
+              "reason": "Interactive web views can ship as immutable assets."
+            }
+          ]
+        },
+        {
+          "choice": "React Native",
+          "fit_score": 24,
+          "score_breakdown": [
+            {
+              "field": "team.languages",
+              "points": 5,
+              "reason": "The team already lists typescript."
+            },
+            {
+              "field": "project.platforms",
+              "points": 14,
+              "reason": "A shared codebase reduces platform duplication."
+            },
+            {
+              "field": "project.platforms",
+              "points": 5,
+              "reason": "Share TypeScript validation and API contracts with the web client."
+            }
+          ]
+        }
       ]
     },
     "backend": {
@@ -137,7 +176,24 @@
         "Allow more baseline memory than a small Go or Node.js service."
       ],
       "source": "https://docs.spring.io/spring-boot/",
-      "fit_score": 20
+      "fit_score": 20,
+      "score_breakdown": [
+        {
+          "field": "team.languages",
+          "points": 5,
+          "reason": "The team already lists java."
+        },
+        {
+          "field": "project.type",
+          "points": 1,
+          "reason": "A single deployable API keeps the initial service boundary explicit."
+        },
+        {
+          "field": "project.type",
+          "points": 14,
+          "reason": "A transaction boundary protects ledger writes and records auditable state changes."
+        }
+      ]
     },
     "database": {
       "choice": "Amazon RDS for PostgreSQL",
@@ -155,7 +211,19 @@
         "Database sizing and failover behavior need load and restore tests."
       ],
       "source": "https://aws.amazon.com/rds/postgresql/pricing/",
-      "fit_score": 9
+      "fit_score": 9,
+      "score_breakdown": [
+        {
+          "field": "scale.workload",
+          "points": 3,
+          "reason": "The data layer is paired with the selected deployment model."
+        },
+        {
+          "field": "scale.workload",
+          "points": 6,
+          "reason": "SQL transactions fit durable state and indexed access."
+        }
+      ]
     },
     "hosting": {
       "choice": "Amazon ECS on AWS Fargate",
@@ -177,7 +245,34 @@
         "The load balancer and always-running task impose a monthly baseline."
       ],
       "source": "https://aws.amazon.com/fargate/pricing/",
-      "fit_score": 25.62
+      "fit_score": 25.62,
+      "score_breakdown": [
+        {
+          "field": "infrastructure.deployment_model",
+          "points": 5,
+          "reason": "Fits the requested managed cloud model."
+        },
+        {
+          "field": "infrastructure.cloud_preference",
+          "points": 6,
+          "reason": "Retains the explicit AWS provider."
+        },
+        {
+          "field": "infrastructure.data_residency",
+          "points": 4,
+          "reason": "Place the data plane and backups in the selected geography."
+        },
+        {
+          "field": "compliance",
+          "points": 12,
+          "reason": "Private tasks and a regional load balancer provide a configurable regulated data plane."
+        },
+        {
+          "field": "budget.monthly_infra_usd",
+          "points": -1.3792,
+          "reason": "The modeled USD 1088–3160 per month affects ranking."
+        }
+      ]
     },
     "supporting": [
       {

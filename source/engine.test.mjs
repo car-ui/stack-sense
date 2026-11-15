@@ -246,6 +246,22 @@ test('scored runner-up explains the margin with scenario-specific factors', asyn
   assert.ok(alternative.score_gap > 0);
   assert.ok(alternative.factors.some((factor) => factor.field === 'requirements.multi_tenant' && factor.points > 0));
   assert.match(alternative.why_not, /tenant/i);
+  for (const layer of ['frontend', 'backend', 'database', 'hosting']) {
+    const component = result.stack[layer];
+    assert.ok(component.score_breakdown.length > 0);
+    assert.ok(component.score_breakdown.every(({ field, points, reason }) =>
+      field && Number.isFinite(points) && reason));
+    const reconstructed = component.score_breakdown.reduce((sum, { points }) => sum + points, 0);
+    assert.ok(Math.abs(reconstructed - component.fit_score) <= 0.01);
+  }
+  assert.equal(result.stack.hosting.fit_score, result.decision_trace.eligible_hosting[0].fit_score);
+  const multiPlatform = recommend(await load('P2')).stack.frontend;
+  assert.equal(multiPlatform.fit_score, undefined);
+  assert.equal(multiPlatform.component_scores.length, 2);
+  for (const component of multiPlatform.component_scores) {
+    const reconstructed = component.score_breakdown.reduce((sum, { points }) => sum + points, 0);
+    assert.ok(Math.abs(reconstructed - component.fit_score) <= 0.01);
+  }
 });
 
 const publicDirectory = () => ({

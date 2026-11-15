@@ -1,6 +1,6 @@
 {
   "scenario_id": "P5",
-  "engine_version": "1.5.0",
+  "engine_version": "1.5.1",
   "assumptions": [
     "context.data_classification defaulted to \"unspecified\".",
     "context.recovery_point_minutes defaulted to null.",
@@ -100,7 +100,24 @@
         "Interactive Server mode maintains connections. Use static server rendering for simple forms where possible."
       ],
       "source": "https://learn.microsoft.com/en-us/aspnet/core/blazor/",
-      "fit_score": 28
+      "fit_score": 28,
+      "score_breakdown": [
+        {
+          "field": "team.languages",
+          "points": 9,
+          "reason": "The team already lists csharp."
+        },
+        {
+          "field": "project.type",
+          "points": 14,
+          "reason": "Form-heavy internal pages benefit from shared .NET models."
+        },
+        {
+          "field": "infrastructure.existing_systems",
+          "points": 5,
+          "reason": "Shared .NET models fit the existing Microsoft data environment."
+        }
+      ]
     },
     "backend": {
       "choice": "ASP.NET Core",
@@ -148,7 +165,29 @@
         "The team needs .NET build and runtime familiarity."
       ],
       "source": "https://learn.microsoft.com/en-us/aspnet/core/",
-      "fit_score": 26
+      "fit_score": 26,
+      "score_breakdown": [
+        {
+          "field": "team.languages",
+          "points": 9,
+          "reason": "The team already lists csharp."
+        },
+        {
+          "field": "project.type",
+          "points": 1,
+          "reason": "A single deployable API keeps the initial service boundary explicit."
+        },
+        {
+          "field": "infrastructure.existing_systems",
+          "points": 11,
+          "reason": "Use the supported SQL Server driver and enterprise integration path."
+        },
+        {
+          "field": "requirements.auth",
+          "points": 5,
+          "reason": "OIDC middleware integrates with enterprise identity."
+        }
+      ]
     },
     "database": {
       "choice": "Existing Microsoft SQL Server",
@@ -186,7 +225,19 @@
         "Database latency and availability depend on the existing site and private network."
       ],
       "source": "https://learn.microsoft.com/en-us/lifecycle/products/sql-server-2019",
-      "fit_score": 33
+      "fit_score": 33,
+      "score_breakdown": [
+        {
+          "field": "scale.workload",
+          "points": 3,
+          "reason": "The data layer is paired with the selected deployment model."
+        },
+        {
+          "field": "infrastructure.existing_systems",
+          "points": 30,
+          "reason": "Reuse the existing database via a TLS-protected private path; verify its facility and backups match residency."
+        }
+      ]
     },
     "hosting": {
       "choice": "Azure App Service",
@@ -208,7 +259,44 @@
         "VNet integration, slots and zone redundancy require the appropriate plan."
       ],
       "source": "https://learn.microsoft.com/en-us/azure/app-service/overview-hosting-plans",
-      "fit_score": 38.06
+      "fit_score": 38.06,
+      "score_breakdown": [
+        {
+          "field": "infrastructure.deployment_model",
+          "points": 5,
+          "reason": "Fits the requested managed cloud model."
+        },
+        {
+          "field": "infrastructure.cloud_preference",
+          "points": 6,
+          "reason": "Retains the explicit AZURE provider."
+        },
+        {
+          "field": "infrastructure.data_residency",
+          "points": 4,
+          "reason": "Place the data plane and backups in the selected geography."
+        },
+        {
+          "field": "infrastructure.existing_systems",
+          "points": 12,
+          "reason": "Hybrid Connections or private networking can reach the existing SQL endpoint."
+        },
+        {
+          "field": "team.languages",
+          "points": 4,
+          "reason": "Managed .NET hosting reduces delivery setup."
+        },
+        {
+          "field": "team.has_devops",
+          "points": 8,
+          "reason": "Managed compute reduces infrastructure maintenance for the team."
+        },
+        {
+          "field": "budget.monthly_infra_usd",
+          "points": -0.9389,
+          "reason": "The modeled USD 39–130 per month affects ranking."
+        }
+      ]
     },
     "supporting": [
       {

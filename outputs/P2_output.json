@@ -1,6 +1,6 @@
 {
   "scenario_id": "P2",
-  "engine_version": "1.5.0",
+  "engine_version": "1.5.1",
   "assumptions": [
     "context.data_classification defaulted to \"unspecified\".",
     "context.recovery_point_minutes defaulted to null.",
@@ -117,6 +117,45 @@
       "sources": [
         "https://nextjs.org/docs/app/getting-started/server-and-client-components",
         "https://reactnative.dev/docs/getting-started"
+      ],
+      "component_scores": [
+        {
+          "choice": "Next.js",
+          "fit_score": 23,
+          "score_breakdown": [
+            {
+              "field": "team.languages",
+              "points": 9,
+              "reason": "The team already lists typescript."
+            },
+            {
+              "field": "requirements.seo_critical",
+              "points": 14,
+              "reason": "SEO-critical pages need crawlable HTML."
+            }
+          ]
+        },
+        {
+          "choice": "React Native",
+          "fit_score": 20,
+          "score_breakdown": [
+            {
+              "field": "team.languages",
+              "points": 9,
+              "reason": "The team already lists typescript."
+            },
+            {
+              "field": "project.platforms",
+              "points": 6,
+              "reason": "A shared codebase reduces platform duplication."
+            },
+            {
+              "field": "project.platforms",
+              "points": 5,
+              "reason": "Share TypeScript validation and API contracts with the web client."
+            }
+          ]
+        }
       ]
     },
     "backend": {
@@ -159,7 +198,29 @@
         "CPU-intensive work must leave the event loop."
       ],
       "source": "https://fastify.dev/docs/latest/",
-      "fit_score": 21
+      "fit_score": 21,
+      "score_breakdown": [
+        {
+          "field": "team.languages",
+          "points": 9,
+          "reason": "The team already lists typescript."
+        },
+        {
+          "field": "project.type",
+          "points": 1,
+          "reason": "A single deployable API keeps the initial service boundary explicit."
+        },
+        {
+          "field": "team.size",
+          "points": 6,
+          "reason": "A small HTTP surface keeps initial operational work low."
+        },
+        {
+          "field": "requirements.realtime",
+          "points": 5,
+          "reason": "Use one Node.js runtime for HTTP and a realtime route."
+        }
+      ]
     },
     "database": {
       "choice": "Amazon RDS for PostgreSQL",
@@ -178,7 +239,24 @@
         "Database sizing and failover behavior need load and restore tests."
       ],
       "source": "https://aws.amazon.com/rds/postgresql/pricing/",
-      "fit_score": 15
+      "fit_score": 15,
+      "score_breakdown": [
+        {
+          "field": "scale.workload",
+          "points": 3,
+          "reason": "The data layer is paired with the selected deployment model."
+        },
+        {
+          "field": "scale.workload",
+          "points": 6,
+          "reason": "SQL transactions fit durable state and indexed access."
+        },
+        {
+          "field": "requirements.full_text_search",
+          "points": 6,
+          "reason": "Native text indexes can cover the first search workload."
+        }
+      ]
     },
     "hosting": {
       "choice": "Amazon ECS on AWS Fargate",
@@ -223,7 +301,39 @@
         "The load balancer and always-running task impose a monthly baseline."
       ],
       "source": "https://aws.amazon.com/fargate/pricing/",
-      "fit_score": 15.71
+      "fit_score": 15.71,
+      "score_breakdown": [
+        {
+          "field": "infrastructure.deployment_model",
+          "points": 5,
+          "reason": "Fits the requested managed cloud model."
+        },
+        {
+          "field": "infrastructure.data_residency",
+          "points": 4,
+          "reason": "Place the data plane and backups in the selected geography."
+        },
+        {
+          "field": "requirements.realtime",
+          "points": 10,
+          "reason": "Always-on container tasks avoid scale-to-zero and request time limits on persistent connections."
+        },
+        {
+          "field": "team.has_devops",
+          "points": 6,
+          "reason": "Managed compute reduces infrastructure maintenance for the team."
+        },
+        {
+          "field": "budget.monthly_infra_usd",
+          "points": -7,
+          "reason": "The high end could exceed the budget."
+        },
+        {
+          "field": "budget.monthly_infra_usd",
+          "points": -2.2894,
+          "reason": "The modeled USD 69–200 per month affects ranking."
+        }
+      ]
     },
     "supporting": [
       {
